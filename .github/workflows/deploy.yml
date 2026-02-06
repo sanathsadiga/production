@@ -1,0 +1,123 @@
+name: Deploy MMCL Production to production server
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm install
+          
+      - name: Build backend
+        run: |
+          cd backend
+          npm run build
+          
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install --legacy-peer-deps
+          
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+          
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            # Navigate to projects directory
+            cd /var/www/projects
+            
+            # Clone or pull the repository
+            if [ -d "mmcl-production" ]; then
+              cd mmcl-production
+              git pull origin main
+            else
+              git clone https://github.com/YOUR_USERNAME/mmcl-production.git
+              cd mmcl-production
+            fi
+            
+            # ========== BACKEND DEPLOYMENT ==========
+            echo "🔧 Deploying Backend..."
+            cd backend
+            npm install --production
+            npm run build
+            
+            # Create .env file from secrets
+            cat > .env << EOF
+            PORT=5002
+            NODE_ENV=production
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            CORS_ORIGIN=https://production.projectdesigners.cloud
+            EOF
+            
+            # Stop old PM2 process
+            pm2 stop mmcl-backend 2>/dev/null || true
+            pm2 delete mmcl-backend 2>/dev/null || true
+            
+            # Start backend with PM2
+            pm2 start dist/index.js --name mmcl-backend --instances 2 --exec-mode cluster
+            pm2 save
+            
+            # ========== FRONTEND DEPLOYMENT ==========
+            echo "🎨 Deploying Frontend..."
+            cd ../frontend
+            npm install --production --legacy-peer-deps
+            npm run build
+            
+            # Create .env file for frontend
+            cat > .env << EOF
+            REACT_APP_API_URL=https://production.projectdesigners.cloud/api
+            REACT_APP_ENV=production
+            EOF
+            
+            # Copy build files to web root
+            sudo mkdir -p /var/www/productions/
+            sudo cp -r build/* /var/www/productions/
+            sudo chown -R www-data:www-data /var/www/productions/
+
+            # ========== DATABASE MIGRATION ==========
+            echo "📊 Running database migrations..."
+            cd ../database
+            bash migrate.sh
+            
+            # ========== NGINX RELOAD ==========
+            echo "🚀 Reloading Nginx..."
+            sudo nginx -t && sudo systemctl reload nginx
+            
+            echo "✅ Deployment completed successfully!"
+            
+      - name: Slack notification on success
+        if: success()
+        run: |
+          echo "✅ MMCL Production deployed successfully to production.projectdesigners.cloud"
+          
+      - name: Slack notification on failure
+        if: failure()
+        run: |
+          echo "❌ MMCL Production deployment failed"
