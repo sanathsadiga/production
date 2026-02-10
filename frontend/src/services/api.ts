@@ -1,11 +1,12 @@
 import axios, { AxiosInstance } from 'axios';
 
 // ✅ HARDCODED for now - frontend running on 3000, backend on 5001
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 // Debug: Log the API base URL
 console.log('🔧 API_BASE_URL:', API_BASE_URL);
 console.log('🔧 process.env.REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+console.log('🔧 NODE_ENV:', process.env.NODE_ENV);
 
 // Create axios instance
 const axiosInstance: AxiosInstance = axios.create({
