@@ -4,6 +4,6 @@
 USE mmcl_production;
 
 INSERT IGNORE INTO newsprint_types (name, code) VALUES
-('High Quality', 'HQ'),
-('Standard', 'STD'),
-('Economy', 'ECO');
+('Ramdas', 'RMD'),
+('Shree Lakshmi Tulasi', 'SLT'),
+('Imported', 'IMP');

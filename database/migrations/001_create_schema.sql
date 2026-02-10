@@ -1,8 +1,3 @@
--- MMCL Production Database Schema
--- Version: 2.1.0
--- Created: 2026-02-03
--- Migration: Create core tables
-
 -- Create Database
 CREATE DATABASE IF NOT EXISTS mmcl_production;
 USE mmcl_production;
@@ -10,13 +5,17 @@ USE mmcl_production;
 -- Disable foreign key checks temporarily
 SET FOREIGN_KEY_CHECKS=0;
 
--- Migration tracking table (create first, before any other tables)
-CREATE TABLE IF NOT EXISTS migrations (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  migration_name VARCHAR(255) UNIQUE NOT NULL,
-  executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_name (migration_name)
-);
+-- Drop existing tables if they exist (in correct order)
+DROP TABLE IF EXISTS downtime_entries;
+DROP TABLE IF EXISTS production_records;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS machines;
+DROP TABLE IF EXISTS downtime_reasons;
+DROP TABLE IF EXISTS newsprint_types;
+DROP TABLE IF EXISTS publications;
+
+-- Re-enable foreign key checks
+SET FOREIGN_KEY_CHECKS=1;
 
 -- Users Table
 CREATE TABLE IF NOT EXISTS users (
@@ -30,9 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
   role ENUM('user', 'admin') DEFAULT 'user',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  KEY idx_email (email),
-  KEY idx_location (location),
-  KEY idx_role (role)
+  KEY idx_location (location)
 );
 
 -- Publications Table
@@ -40,17 +37,21 @@ CREATE TABLE IF NOT EXISTS publications (
   id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) UNIQUE NOT NULL,
   code VARCHAR(50),
+  publication_type ENUM('VK', 'OSP', 'NAMMA') DEFAULT 'OSP',
+  location VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  KEY idx_name (name)
+  KEY idx_type (publication_type)
 );
 
 -- Downtime Reasons Table
 CREATE TABLE IF NOT EXISTS downtime_reasons (
   id INT PRIMARY KEY AUTO_INCREMENT,
-  reason VARCHAR(255) UNIQUE NOT NULL,
+  reason VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
   code VARCHAR(50),
+  category VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  KEY idx_reason (reason)
+  UNIQUE KEY idx_reason (reason)
 );
 
 -- Machines Table
@@ -58,8 +59,7 @@ CREATE TABLE IF NOT EXISTS machines (
   id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) UNIQUE NOT NULL,
   code VARCHAR(50),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  KEY idx_name (name)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Newsprint Types Table
@@ -67,8 +67,8 @@ CREATE TABLE IF NOT EXISTS newsprint_types (
   id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) UNIQUE NOT NULL,
   code VARCHAR(50),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  KEY idx_name (name)
+  gsm INT DEFAULT 45,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Production Records Table
@@ -115,10 +115,3 @@ CREATE TABLE IF NOT EXISTS downtime_entries (
   KEY idx_record (production_record_id),
   KEY idx_reason (downtime_reason_id)
 );
-
--- Re-enable foreign key checks
-SET FOREIGN_KEY_CHECKS=1;
-
--- Record this migration as executed
-INSERT INTO migrations (migration_name) VALUES ('001_create_tables')
-ON DUPLICATE KEY UPDATE executed_at = CURRENT_TIMESTAMP;

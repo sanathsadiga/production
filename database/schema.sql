@@ -41,7 +41,9 @@ CREATE TABLE IF NOT EXISTS publications (
   id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) UNIQUE NOT NULL,
   code VARCHAR(50),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  publication_type ENUM('VK', 'OSP', 'NAMMA') DEFAULT 'OSP',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_type (publication_type)
 );
 
 -- Downtime Reasons Table

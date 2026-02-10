@@ -15,7 +15,7 @@ INSERT IGNORE INTO users (email, name, password, phone_number, location, locatio
 ('raghavendraorao.inamdar@timesofindia.com', 'Raghavendra', 'Mmcl1509', '9341110885', 'Gulbarga', 'GLB1509', 'user'),
 ('shiddappa.kashibadiger@timesofindia.com', 'Shiddappa', 'Mmcl1511', '9739996689', 'Belgaum', 'BGM1511', 'user'),
 ('vinay.gh@timesofindia.com', 'Vinay', 'Mmcl1501', '9739948515', 'Bengaluru', 'BNG1501', 'user'),
-('user@gmail.com', 'Generic User', 'user123', '9000000000', 'Generic Location', 'GL0001', 'user'),
+('user@gmail.com', 'Generic User', 'user123', '9000000000', '', 'GL0001', 'user'),
 -- Admin Users
 ('deepak.saluja@timesofindia.com', 'deepak saluja', 'Admin123', '9999999991', 'Bangalore', 'HO001', 'admin'),
 ('girish.k@timesofindia.com', 'Girish Bhat', 'Admin123', '9999999992', 'Bangalore', 'CORP001', 'admin'),

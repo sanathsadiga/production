@@ -1,80 +1,120 @@
 // Master data - Hardcoded configurations
-export const PUBLICATIONS = [
-  { id: 1, name: "MNG UTHARA DESAM", code: "1502" },
-  { id: 2, name: "SAMYUKTA KARNATAKA - MANGALORE", code: "1502" },
-  { id: 3, name: "MADHYAMA BIMBA - MANGALORE", code: "1502" },
-  { id: 4, name: "TULUNADU VARTHE - MANGALORE", code: "1502" },
-  { id: 5, name: "VIVEKA SAMPADA - MANGALORE", code: "1502" },
-  { id: 6, name: "MNG DIGANTHA MUDRANA", code: "1502" },
-  { id: 7, name: "MNG MADHUBAN GRAPHICS", code: "1502" },
-  { id: 8, name: "TIMES OF BEDRA", code: "1502" },
-  { id: 9, name: "TULUNADA BOLPU", code: "1502" },
-  { id: 10, name: "HBL JANAMADHYAMA", code: "1503" },
-  { id: 11, name: "HBL SIRSI SAMACHAR", code: "1503" },
-  { id: 12, name: "HBL TATVA NISHTA", code: "1503" },
-  { id: 13, name: "THE NEWS TRAIL", code: "1503" },
-  { id: 14, name: "RAJYADHARMA - MYSORE", code: "1505" },
-  { id: 15, name: "HELLO MYSORE - MYSORE", code: "1505" },
-  { id: 16, name: "PRATHINIDHI - MYSORE", code: "1505" },
-  { id: 17, name: "MYS KANNADIGARA PRAJANUDI", code: "1505" },
-  { id: 18, name: "MYS VISHWADHUTHA", code: "1505" },
-  { id: 19, name: "MYS MYSORE VIJAYA", code: "1505" },
-  { id: 20, name: "SAMYUKTHA KARNATAKA - BAGALKOT", code: "1506" },
-  { id: 21, name: "GVT HAMPI TIMES", code: "1507" },
-  { id: 22, name: "GVT LOKA DWANI", code: "1507" },
-  { id: 23, name: "ECHHARIKE - SHIMOGA", code: "1508" },
-  { id: 24, name: "KRANTHI DEEPA - SHIMOGA", code: "1508" },
-  { id: 25, name: "JANA HORATA - SHIMOGA", code: "1508" },
-  { id: 26, name: "JAI KARUNADU KALA - SHIMOGA", code: "1508" },
-  { id: 27, name: "KANNADA PRABHA - SHIMOGA", code: "1508" },
-  { id: 28, name: "SMG MALENADU MITRA", code: "1508" },
-  { id: 29, name: "SHIVAMOGGA TIMES - SHIMOGA", code: "1508" },
-  { id: 30, name: "SAMYUKTA KARNATAKA - GULBARGA", code: "1509" },
-  { id: 31, name: "GLB MALLAMMANA NUDI", code: "1509" },
-  { id: 32, name: "NISARGA SARATHYA DAILY NEWS - GLB", code: "1509" },
-  { id: 33, name: "GLB SALAR DAILY", code: "1509" },
-  { id: 34, name: "VAARTHA BHARATHI", code: "1509" },
-  { id: 35, name: "SAMYUKTA KARNATAKA - BELAGAVI", code: "1511" },
-  { id: 36, name: "Bengaluru Rural", code: "1501" },
-  { id: 37, name: "Bengaluru city", code: "1501" },
-  { id: 38, name: "VK student Edition", code: "1501" },
-  { id: 39, name: "Lavala VK", code: "1501" },
-  { id: 40, name: "BLG VKMINI SPLIT", code: "1501" },
-  { id: 41, name: "Karwara", code: "1501" },
-  { id: 42, name: "Belagavi Main", code: "1501" },
-  { id: 43, name: "BLG VKMINI SPLIT", code: "1501" },
-  { id: 44, name: "BELGAVI VKMINI", code: "1501" },
-  { id: 45, name: "Namma Chikkodi", code: "1501" },
-  { id: 46, name: "Namma Belagavi", code: "1501" },
-  { id: 47, name: "Namma BailaHongala", code: "1501" },
-  { id: 48, name: "Namma Haveri", code: "1501" },
-  { id: 49, name: "Namma Karawara", code: "1501" },
-  { id: 50, name: "Namma Gadag", code: "1501" },
-  { id: 51, name: "Namma Mahanagara", code: "1501" },
-  { id: 52, name: "Hubballi", code: "1501" },
-  { id: 53, name: "HBL VKMINI SPLIT", code: "1501" },
-  { id: 54, name: "HUBLI VKMINI", code: "1501" },
-  { id: 55, name: "Vk Main", code: "1501" },
-  { id: 56, name: "Namma Kasargod", code: "1501" },
-  { id: 57, name: "Namma Puttur", code: "1501" },
-  { id: 58, name: "Namma Mangalore", code: "1501" },
-  { id: 59, name: "Namma Udupi", code: "1501" },
-  { id: 60, name: "Vkmnc", code: "1501" },
-  { id: 61, name: "MANGALORE VKMINI", code: "1501" },
-  { id: 62, name: "MNG VKMINI SPLIT", code: "1501" },
-  { id: 63, name: "Namma Bantwala", code: "1501" },
-  { id: 64, name: "Namma Kundapur", code: "1501" },
-  { id: 65, name: "MYSORE", code: "1501" },
-  { id: 66, name: "Hassan", code: "1501" },
-  { id: 67, name: "MYSORE VKMINI", code: "1501" },
-  { id: 68, name: "MYSSPL", code: "1501" },
-  { id: 69, name: "VKGAN", code: "1501" },
-  { id: 70, name: "Namma Vijayanagara", code: "1501" },
-  { id: 71, name: "Namma Raichur", code: "1501" },
-  { id: 72, name: "Namma Bellary", code: "1501" },
-  { id: 73, name: "VK CTDMAIN", code: "1501" },
-  { id: 74, name: "Namma Chitradurga", code: "1501" },
-  { id: 75, name: "CTD VKMINI SPLIT", code: "1501" },
+// VK Publications (Vikrama Samvat related)
+export const VK_PUBLICATIONS = [
+  { id: 38, name: "VK student Edition", code: "1501", type: "VK" },
+  { id: 39, name: "Lavala VK", code: "1501", type: "VK" },
+  { id: 40, name: "BLG VKMINI SPLIT", code: "1501", type: "VK" },
+  { id: 43, name: "BELGAVI VKMINI", code: "1501", type: "VK" },
+  { id: 53, name: "HBL VKMINI SPLIT", code: "1501", type: "VK" },
+  { id: 54, name: "HUBLI VKMINI", code: "1501", type: "VK" },
+  { id: 55, name: "Vk Main", code: "1501", type: "VK" },
+  { id: 60, name: "Vkmnc", code: "1501", type: "VK" },
+  { id: 61, name: "MANGALORE VKMINI", code: "1501", type: "VK" },
+  { id: 62, name: "MNG VKMINI SPLIT", code: "1501", type: "VK" },
+  { id: 67, name: "MYSORE VKMINI", code: "1501", type: "VK" },
+  { id: 68, name: "MYSSPL", code: "1501", type: "VK" },
+  { id: 69, name: "VKGAN", code: "1501", type: "VK" },
+  { id: 73, name: "VK CTDMAIN", code: "1501", type: "VK" },
+  { id: 75, name: "CTD VKMINI SPLIT", code: "1501", type: "VK" },
+];
+
+// OSP Publications (Other Service Publications)
+export const OSP_PUBLICATIONS = [
+  { id: 1, name: "MNG UTHARA DESAM", code: "1502", type: "OSP" },
+  { id: 2, name: "SAMYUKTA KARNATAKA - MANGALORE", code: "1502", type: "OSP" },
+  { id: 3, name: "MADHYAMA BIMBA - MANGALORE", code: "1502", type: "OSP" },
+  { id: 4, name: "TULUNADU VARTHE - MANGALORE", code: "1502", type: "OSP" },
+  { id: 5, name: "VIVEKA SAMPADA - MANGALORE", code: "1502", type: "OSP" },
+  { id: 6, name: "MNG DIGANTHA MUDRANA", code: "1502", type: "OSP" },
+  { id: 7, name: "MNG MADHUBAN GRAPHICS", code: "1502", type: "OSP" },
+  { id: 8, name: "TIMES OF BEDRA", code: "1502", type: "OSP" },
+  { id: 9, name: "TULUNADA BOLPU", code: "1502", type: "OSP" },
+  { id: 10, name: "HBL JANAMADHYAMA", code: "1503", type: "OSP" },
+  { id: 11, name: "HBL SIRSI SAMACHAR", code: "1503", type: "OSP" },
+  { id: 12, name: "HBL TATVA NISHTA", code: "1503", type: "OSP" },
+  { id: 13, name: "THE NEWS TRAIL", code: "1503", type: "OSP" },
+  { id: 14, name: "RAJYADHARMA - MYSORE", code: "1505", type: "OSP" },
+  { id: 15, name: "HELLO MYSORE - MYSORE", code: "1505", type: "OSP" },
+  { id: 16, name: "PRATHINIDHI - MYSORE", code: "1505", type: "OSP" },
+  { id: 17, name: "MYS KANNADIGARA PRAJANUDI", code: "1505", type: "OSP" },
+  { id: 18, name: "MYS VISHWADHUTHA", code: "1505", type: "OSP" },
+  { id: 19, name: "MYS MYSORE VIJAYA", code: "1505", type: "OSP" },
+  { id: 20, name: "SAMYUKTHA KARNATAKA - BAGALKOT", code: "1506", type: "OSP" },
+  { id: 21, name: "GVT HAMPI TIMES", code: "1507", type: "OSP" },
+  { id: 22, name: "GVT LOKA DWANI", code: "1507", type: "OSP" },
+  { id: 23, name: "ECHHARIKE - SHIMOGA", code: "1508", type: "OSP" },
+  { id: 24, name: "KRANTHI DEEPA - SHIMOGA", code: "1508", type: "OSP" },
+  { id: 25, name: "JANA HORATA - SHIMOGA", code: "1508", type: "OSP" },
+  { id: 26, name: "JAI KARUNADU KALA - SHIMOGA", code: "1508", type: "OSP" },
+  { id: 27, name: "KANNADA PRABHA - SHIMOGA", code: "1508", type: "OSP" },
+  { id: 28, name: "SMG MALENADU MITRA", code: "1508", type: "OSP" },
+  { id: 29, name: "SHIVAMOGGA TIMES - SHIMOGA", code: "1508", type: "OSP" },
+  { id: 30, name: "SAMYUKTA KARNATAKA - GULBARGA", code: "1509", type: "OSP" },
+  { id: 31, name: "GLB MALLAMMANA NUDI", code: "1509", type: "OSP" },
+  { id: 32, name: "NISARGA SARATHYA DAILY NEWS - GLB", code: "1509", type: "OSP" },
+  { id: 33, name: "GLB SALAR DAILY", code: "1509", type: "OSP" },
+  { id: 34, name: "VAARTHA BHARATHI", code: "1509", type: "OSP" },
+  { id: 35, name: "SAMYUKTA KARNATAKA - BELAGAVI", code: "1511", type: "OSP" },
+];
+
+// Namma Publications (Regional/Local)
+export const NAMMA_PUBLICATIONS = [
+  { id: 36, name: "Bengaluru Rural", code: "1501", type: "OSP" },
+  { id: 37, name: "Bengaluru city", code: "1501", type: "OSP" },
+  { id: 45, name: "Namma Chikkodi", code: "1501", type: "OSP" },
+  { id: 46, name: "Namma Belagavi", code: "1501", type: "OSP" },
+  { id: 47, name: "Namma BailaHongala", code: "1501", type: "OSP" },
+  { id: 48, name: "Namma Haveri", code: "1501", type: "OSP" },
+  { id: 49, name: "Namma Karawara", code: "1501", type: "OSP" },
+  { id: 50, name: "Namma Gadag", code: "1501", type: "OSP" },
+  { id: 51, name: "Namma Mahanagara", code: "1501", type: "OSP" },
+  { id: 56, name: "Namma Kasargod", code: "1501", type: "OSP" },
+  { id: 57, name: "Namma Puttur", code: "1501", type: "OSP" },
+  { id: 58, name: "Namma Mangalore", code: "1501", type: "OSP" },
+  { id: 59, name: "Namma Udupi", code: "1501", type: "OSP" },
+  { id: 63, name: "Namma Bantwala", code: "1501", type: "OSP" },
+  { id: 64, name: "Namma Kundapur", code: "1501", type: "OSP" },
+  { id: 65, name: "MYSORE", code: "1501", type: "OSP" },
+  { id: 66, name: "Hassan", code: "1501", type: "OSP" },
+  { id: 70, name: "Namma Vijayanagara", code: "1501", type: "OSP" },
+  { id: 71, name: "Namma Raichur", code: "1501", type: "OSP" },
+  { id: 72, name: "Namma Bellary", code: "1501", type: "OSP" },
+  { id: 74, name: "Namma Chitradurga", code: "1501", type: "OSP" },
+  { id: 41, name: "Karwara", code: "1501", type: "OSP" },
+  { id: 42, name: "Belagavi Main", code: "1501", type: "OSP" },
+  { id: 52, name: "Hubballi", code: "1501", type: "OSP" },
+];
+
+// Publications with location
+export interface Publication {
+  id: number;
+  name: string;
+  code?: string;
+  type: 'VK' | 'OSP' | 'NAMMA';
+  location?: string;
+}
+
+// Combined for backward compatibility
+export const PUBLICATIONS: Publication[] = [
+  // OSP Publications
+  { id: 1, name: 'MNG UTHARA DESAM', type: 'OSP', location: 'Mangalore' },
+  { id: 2, name: 'SAMYUKTA KARNATAKA - MANGALORE', type: 'OSP', location: 'Mangalore' },
+  { id: 3, name: 'HBL JANAMADHYAMA', type: 'OSP', location: 'Hubli' },
+  { id: 4, name: 'RAJYADHARMA - MYSORE', type: 'OSP', location: 'Mysore' },
+  { id: 5, name: 'SAMYUKTHA KARNATAKA - BAGALKOT', type: 'OSP', location: 'Bagalkote' },
+  
+  // VK Publications
+  { id: 6, name: 'VK Student Edition', type: 'VK', location: 'Bengaluru' },
+  { id: 7, name: 'VK Main', type: 'VK', location: 'Bengaluru' },
+  { id: 8, name: 'HUBLI VKMINI', type: 'VK', location: 'Hubli' },
+  { id: 9, name: 'MYSORE VKMINI', type: 'VK', location: 'Mysore' },
+  { id: 10, name: 'MANGALORE VKMINI', type: 'VK', location: 'Mangalore' },
+  
+  // NAMMA Publications
+  { id: 11, name: 'Bengaluru Rural', type: 'NAMMA', location: 'Bengaluru' },
+  { id: 12, name: 'Namma Mangalore', type: 'NAMMA', location: 'Mangalore' },
+  { id: 13, name: 'Namma Mysore', type: 'NAMMA', location: 'Mysore' },
+  { id: 14, name: 'Hubli Namma', type: 'NAMMA', location: 'Hubli' },
 ];
 
 export const MACHINES = [
@@ -241,3 +281,10 @@ export const ALL_USERS = [...USERS, ...ADMINS];
 export const LOCATIONS = Array.from(
   new Set(ALL_USERS.map((u) => u.location)),
 ).sort();
+
+// Helper function to get publications by type
+export const getPublicationsByType = (type: 'VK' | 'OSP') => {
+  if (type === 'VK') return VK_PUBLICATIONS;
+  if (type === 'OSP') return [...OSP_PUBLICATIONS, ...NAMMA_PUBLICATIONS];
+  return PUBLICATIONS;
+};

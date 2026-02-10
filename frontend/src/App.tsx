@@ -4,39 +4,63 @@ import { AuthProvider } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { UserDashboard } from './pages/UserDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminReports } from './pages/AdminReports';
+import { ManagePublications } from './pages/ManagePublications';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import './App.css';
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <Routes>
+          {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
-          
-          <Route
-            path="/user/dashboard"
+
+          {/* Protected user routes */}
+          <Route 
+            path="/user/dashboard" 
             element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute allowedRoles={['user', 'admin']}>
                 <UserDashboard />
               </ProtectedRoute>
-            }
+            } 
           />
-          
-          <Route
-            path="/admin/dashboard"
+
+          {/* Protected admin routes */}
+          <Route 
+            path="/admin/dashboard" 
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute allowedRoles={['admin']}>
                 <AdminDashboard />
               </ProtectedRoute>
-            }
+            } 
           />
-          
+          <Route 
+            path="/admin/reports" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminReports />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/manage-publications" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ManagePublications />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Root redirect */}
           <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* 404 fallback */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 };
 

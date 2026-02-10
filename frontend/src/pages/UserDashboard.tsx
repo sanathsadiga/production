@@ -9,6 +9,8 @@ interface Publication {
   id: number;
   name: string;
   code: string;
+  publication_type?: string; // VK, OSP, NAMMA
+  location?: string; // ✅ Added location field
 }
 
 interface Machine {
@@ -111,8 +113,6 @@ type ModalType = "view" | "edit" | null;
 
 export const UserDashboard: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>("form");
-  const [publications, setPublications] = useState<Publication[]>([]);
   const [machines, setMachines] = useState<Machine[]>([]);
   const [downtimeReasons, setDowntimeReasons] = useState<DowntimeReason[]>([]);
   const [newsprintTypes, setNewsprintTypes] = useState<NewsprintType[]>([]);
@@ -128,6 +128,13 @@ export const UserDashboard: React.FC = () => {
   >([]);
   const [showPublicationDropdown, setShowPublicationDropdown] = useState(false);
   const publicationDropdownRef = useRef<HTMLDivElement>(null);
+
+  // ✅ Publications filtered by user's location
+  const [vkPublications, setVkPublications] = useState<Publication[]>([]);
+  const [ospPublications, setOspPublications] = useState<Publication[]>([]);
+  const [nammaPublications, setNammaPublications] = useState<Publication[]>([]);
+  const [publicationType, setPublicationType] = useState<'VK' | 'OSP' | 'NAMMA' | ''>('');
+  const [allPublications, setAllPublications] = useState<Publication[]>([]);
 
   const [formData, setFormData] = useState({
     publication_id: "",
@@ -153,49 +160,91 @@ export const UserDashboard: React.FC = () => {
     record_date: new Date().toISOString().split("T")[0],
   });
 
-  // Modal states with proper typing
+  // Modal states
   const [modalType, setModalType] = useState<ModalType>(null);
   const [selectedRecord, setSelectedRecord] = useState<ProductionRecord | null>(
     null,
   );
   const [editFormData, setEditFormData] = useState<EditFormData | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>("form");
 
-  // Load master data
+  // ✅ Load master data and filter by user location
   useEffect(() => {
     const loadMasterData = async (): Promise<void> => {
       try {
-        const [pubRes, machRes, dtRes, npRes] = await Promise.all([
-          masterAPI.getPublications(),
+        console.log(`📍 Loading publications for location: ${user?.location}`);
+
+        const [vkRes, ospRes, nammaRes, machRes, dtRes, npRes] = await Promise.all([
+          masterAPI.getPublications('VK'),
+          masterAPI.getPublications('OSP'),
+          masterAPI.getPublications('NAMMA'),
           masterAPI.getMachines(),
           masterAPI.getDowntimeReasons(),
           masterAPI.getNewsprintTypes(),
         ]);
 
-        const publicationsData = pubRes.data.data || pubRes.data;
-        const machinesData = machRes.data.data || machRes.data;
-        const downtimeReasonsData = dtRes.data.data || dtRes.data;
-        const newsprintTypesData = npRes.data.data || npRes.data;
+        const vkData = vkRes.data.data || vkRes.data || [];
+        const ospData = ospRes.data.data || ospRes.data || [];
+        const nammaData = nammaRes.data.data || nammaRes.data || [];
+        const machinesData = machRes.data.data || machRes.data || [];
+        const downtimeReasonsData = dtRes.data.data || dtRes.data || [];
+        const newsprintTypesData = npRes.data.data || npRes.data || [];
 
-        setPublications(
-          Array.isArray(publicationsData) ? publicationsData : [],
-        );
+        console.log('📊 Raw API Response - VK:', vkData.length);
+        console.log('📊 Raw API Response - OSP:', ospData.length);
+        console.log('📊 Raw API Response - NAMMA:', nammaData.length);
+        console.log('📊 Sample VK publication:', vkData[0]);
+        console.log('📊 Sample OSP publication:', ospData[0]);
+
+        // ✅ Filter publications by user's location (case-insensitive)
+        const filterByLocation = (pubs: Publication[]): Publication[] => {
+          if (!Array.isArray(pubs)) return [];
+          const filtered = pubs.filter(
+            (pub) => pub.location?.toLowerCase() === user?.location?.toLowerCase()
+          );
+          console.log(`🔍 Filtered ${pubs.length} publications to ${filtered.length} for location: ${user?.location}`);
+          return filtered;
+        };
+
+        const vkFiltered = filterByLocation(vkData);
+        const ospFiltered = filterByLocation(ospData);
+        const nammaFiltered = filterByLocation(nammaData);
+
+        setVkPublications(vkFiltered);
+        setOspPublications(ospFiltered);
+        setNammaPublications(nammaFiltered);
+
+        // ✅ Combine all publications for search
+        const combined = [...vkFiltered, ...ospFiltered, ...nammaFiltered];
+        setAllPublications(combined);
+
         setMachines(Array.isArray(machinesData) ? machinesData : []);
-        setDowntimeReasons(
-          Array.isArray(downtimeReasonsData) ? downtimeReasonsData : [],
-        );
-        setNewsprintTypes(
-          Array.isArray(newsprintTypesData) ? newsprintTypesData : [],
-        );
+        setDowntimeReasons(Array.isArray(downtimeReasonsData) ? downtimeReasonsData : []);
+        setNewsprintTypes(Array.isArray(newsprintTypesData) ? newsprintTypesData : []);
+
+        console.log('✅ Publications filtered by location:', {
+          location: user?.location,
+          vk: vkFiltered.length,
+          osp: ospFiltered.length,
+          namma: nammaFiltered.length,
+          total: combined.length,
+        });
+
+        if (combined.length === 0) {
+          setErrorMessage(`⚠️ No publications available for your location: ${user?.location}`);
+        } else {
+          setErrorMessage(''); // Clear error if publications are found
+        }
       } catch (error) {
-        console.error("Error loading master data:", error);
-        setErrorMessage("Failed to load master data");
+        console.error('❌ Error loading master data:', error);
+        setErrorMessage('Failed to load master data');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadMasterData();
-  }, []);
+  }, [user?.location]);
 
   // Load user records
   useEffect(() => {
@@ -229,18 +278,52 @@ export const UserDashboard: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ✅ Handle publication type change - show filtered publications
+  const handlePublicationTypeChange = (type: 'VK' | 'OSP' | 'NAMMA') => {
+    setPublicationType(type);
+    setPublicationSearch('');
+
+    let pubs: Publication[] = [];
+    if (type === 'VK') {
+      pubs = vkPublications;
+    } else if (type === 'OSP') {
+      pubs = ospPublications;
+    } else if (type === 'NAMMA') {
+      pubs = nammaPublications;
+    }
+
+    setFilteredPublications(pubs);
+    setFormData(prev => ({
+      ...prev,
+      publication_id: '',
+      custom_publication_name: '',
+    }));
+  };
+
   // Handle publication search
   const handlePublicationSearch = (value: string): void => {
     setPublicationSearch(value);
     setShowPublicationDropdown(true);
 
+    // Filter based on selected type
+    let pubsToSearch: Publication[] = [];
+    if (publicationType === 'VK') {
+      pubsToSearch = vkPublications;
+    } else if (publicationType === 'OSP') {
+      pubsToSearch = ospPublications;
+    } else if (publicationType === 'NAMMA') {
+      pubsToSearch = nammaPublications;
+    } else {
+      pubsToSearch = allPublications;
+    }
+
     if (value.trim().length > 0) {
-      const filtered = publications.filter((pub) =>
+      const filtered = pubsToSearch.filter((pub) =>
         pub.name.toLowerCase().includes(value.toLowerCase()),
       );
       setFilteredPublications(filtered);
     } else {
-      setFilteredPublications(publications);
+      setFilteredPublications(pubsToSearch);
     }
   };
 
@@ -428,6 +511,7 @@ export const UserDashboard: React.FC = () => {
         remarks: "",
         record_date: new Date().toISOString().split("T")[0],
       });
+      setPublicationType('');
       setPublicationSearch("");
 
       // Reload user records
@@ -462,7 +546,6 @@ export const UserDashboard: React.FC = () => {
         await productionAPI.deleteRecord(recordId);
         setSuccessMessage("Record deleted successfully!");
 
-        // Reload user records
         if (user) {
           const response = await productionAPI.getRecordsByUser(user.id);
           const records = response.data?.data || response.data || [];
@@ -553,7 +636,6 @@ export const UserDashboard: React.FC = () => {
   };
 
   // Handle edit submit - with proper null guard and type conversion
-  // Handle edit submit - with proper null guard and type conversion
   const handleEditSubmit = async (
     e: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
@@ -622,7 +704,7 @@ export const UserDashboard: React.FC = () => {
   ): string => {
     if (customName) return customName;
     if (pubId) {
-      const pub = publications.find((p) => p.id === pubId);
+      const pub = allPublications.find((p) => p.id === pubId);
       return pub?.name || "Unknown";
     }
     return "N/A";
@@ -643,7 +725,7 @@ export const UserDashboard: React.FC = () => {
     return (
       <div>
         <UserNavbar />
-        <div className="loading">Loading...</div>
+        <div className="loading">⏳ Loading publications for your location...</div>
       </div>
     );
   }
@@ -654,7 +736,7 @@ export const UserDashboard: React.FC = () => {
       <div className="user-dashboard">
         <div className="dashboard-header">
           <h2>Welcome, {user?.name}</h2>
-          <p>Location: {user?.location}</p>
+          <p>📍 Location: {user?.location}</p>
         </div>
 
         {/* Tab Navigation */}
@@ -686,101 +768,152 @@ export const UserDashboard: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit} className="production-form">
-              {/* ...existing form sections... */}
+              {/* ✅ Publication Type Selector */}
+              <div className="form-section">
+                <h4>Select Publication Type 📰</h4>
+                <div className="publication-type-selector">
+                  <button
+                    type="button"
+                    className={`type-btn ${publicationType === 'VK' ? 'active' : ''}`}
+                    onClick={() => handlePublicationTypeChange('VK')}
+                    disabled={vkPublications.length === 0}
+                    title={vkPublications.length === 0 ? "No VK publications for your location" : ""}
+                  >
+                    📰 VK ({vkPublications.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`type-btn ${publicationType === 'OSP' ? 'active' : ''}`}
+                    onClick={() => handlePublicationTypeChange('OSP')}
+                    disabled={ospPublications.length === 0}
+                    title={ospPublications.length === 0 ? "No OSP publications for your location" : ""}
+                  >
+                    📰 OSP ({ospPublications.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`type-btn ${publicationType === 'NAMMA' ? 'active' : ''}`}
+                    onClick={() => handlePublicationTypeChange('NAMMA')}
+                    disabled={nammaPublications.length === 0}
+                    title={nammaPublications.length === 0 ? "No NAMMA publications for your location" : ""}
+                  >
+                    📰 NAMMA ({nammaPublications.length})
+                  </button>
+                </div>
+              </div>
+
+              {/* Publication & PO Details */}
               <div className="form-section">
                 <h4>Publication & PO Details</h4>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="publication">Publication *</label>
-                    <div
-                      className="publication-search-wrapper"
-                      ref={publicationDropdownRef}
-                    >
-                      <input
-                        type="text"
-                        id="publication"
-                        placeholder="Search or type publication name..."
-                        value={publicationSearch}
-                        onChange={(e) =>
-                          handlePublicationSearch(e.target.value)
-                        }
-                        onFocus={() => {
-                          setShowPublicationDropdown(true);
-                          if (publicationSearch.trim().length === 0) {
-                            setFilteredPublications(publications);
+                
+                {publicationType && (
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="publication">
+                        {publicationType} Publication *
+                      </label>
+                      <div
+                        className="publication-search-wrapper"
+                        ref={publicationDropdownRef}
+                      >
+                        <input
+                          type="text"
+                          id="publication"
+                          placeholder={`Search ${publicationType} publications...`}
+                          value={publicationSearch}
+                          onChange={(e) =>
+                            handlePublicationSearch(e.target.value)
                           }
-                        }}
-                        className="publication-search-input"
-                      />
-                      {showPublicationDropdown && (
-                        <div className="publication-dropdown">
-                          {filteredPublications.length > 0 ? (
-                            <>
-                              {filteredPublications.map((pub) => (
+                          onFocus={() => {
+                            setShowPublicationDropdown(true);
+                            if (publicationSearch.trim().length === 0) {
+                              if (publicationType === 'VK') {
+                                setFilteredPublications(vkPublications);
+                              } else if (publicationType === 'OSP') {
+                                setFilteredPublications(ospPublications);
+                              } else if (publicationType === 'NAMMA') {
+                                setFilteredPublications(nammaPublications);
+                              }
+                            }
+                          }}
+                          className="publication-search-input"
+                        />
+                        {showPublicationDropdown && (
+                          <div className="publication-dropdown">
+                            {filteredPublications.length > 0 ? (
+                              <>
+                                {filteredPublications.map((pub) => (
+                                  <div
+                                    key={pub.id}
+                                    className="publication-option"
+                                    onClick={() => handlePublicationSelect(pub)}
+                                  >
+                                    <span className="pub-name">{pub.name}</span>
+                                    <span className="pub-code">{pub.code}</span>
+                                  </div>
+                                ))}
+                                <div className="publication-divider"></div>
                                 <div
-                                  key={pub.id}
-                                  className="publication-option"
-                                  onClick={() => handlePublicationSelect(pub)}
+                                  className="publication-option other-option"
+                                  onClick={handleOneTimePublication}
                                 >
-                                  <span className="pub-name">{pub.name}</span>
-                                  <span className="pub-code">{pub.code}</span>
+                                  <span>+ One Time (Enter Publication Name)</span>
                                 </div>
-                              ))}
-                              <div className="publication-divider"></div>
-                              <div
-                                className="publication-option other-option"
-                                onClick={handleOneTimePublication}
-                              >
-                                <span>+ One Time (Enter Publication Name)</span>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="publication-option disabled">
-                                No publications found
-                              </div>
-                              <div className="publication-divider"></div>
-                              <div
-                                className="publication-option other-option"
-                                onClick={handleOneTimePublication}
-                              >
-                                <span>+ One Time (Enter Publication Name)</span>
-                              </div>
-                            </>
-                          )}
+                              </>
+                            ) : (
+                              <>
+                                <div className="publication-option disabled">
+                                  No publications found for {user?.location}
+                                </div>
+                                <div className="publication-divider"></div>
+                                <div
+                                  className="publication-option other-option"
+                                  onClick={handleOneTimePublication}
+                                >
+                                  <span>+ One Time (Enter Publication Name)</span>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {formData.publication_id === "one-time" && (
+                        <div className="form-group" style={{ marginTop: "10px" }}>
+                          <label htmlFor="custom_publication">
+                            Enter Publication Name *
+                          </label>
+                          <input
+                            id="custom_publication"
+                            type="text"
+                            name="custom_publication_name"
+                            value={formData.custom_publication_name}
+                            onChange={handleInputChange}
+                            placeholder="Enter publication name"
+                            required
+                          />
                         </div>
                       )}
                     </div>
-                    {formData.publication_id === "one-time" && (
-                      <div className="form-group" style={{ marginTop: "10px" }}>
-                        <label htmlFor="custom_publication">
-                          Enter Publication Name *
-                        </label>
-                        <input
-                          id="custom_publication"
-                          type="text"
-                          name="custom_publication_name"
-                          value={formData.custom_publication_name}
-                          onChange={handleInputChange}
-                          placeholder="Enter publication name"
-                          required
-                        />
-                      </div>
-                    )}
+                    <div className="form-group">
+                      <label htmlFor="po_number">PO Number *</label>
+                      <input
+                        id="po_number"
+                        type="number"
+                        name="po_number"
+                        value={formData.po_number}
+                        onChange={handleInputChange}
+                        placeholder="Enter PO number"
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="po_number">PO Number *</label>
-                    <input
-                      id="po_number"
-                      type="number"
-                      name="po_number"
-                      value={formData.po_number}
-                      onChange={handleInputChange}
-                      placeholder="Enter PO number"
-                      required
-                    />
+                )}
+
+                {!publicationType && (
+                  <div className="form-message">
+                    <p>👆 Please select a publication type above to continue</p>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="form-section">
@@ -957,8 +1090,7 @@ export const UserDashboard: React.FC = () => {
                           maxLength={8}
                         />
                         <small style={{ color: "#666" }}>
-                          Enter as HH:MM:SS (e.g., 00:10:00 for 10 mins,
-                          02:30:00 for 2.5 hours)
+                          Enter as HH:MM:SS
                         </small>
                       </div>
 
@@ -1562,3 +1694,5 @@ const formatDuration = (value: string): string => {
 
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 };
+
+export default UserDashboard;
