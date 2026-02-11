@@ -39,7 +39,14 @@ router.post('/login', async (req: Request, res: Response) => {
 
       const user = users[0];
 
-      // Verify password
+      // Verify password with detailed logging
+      console.log(`🔍 Password check for ${email}:`);
+      console.log(`   Stored password: "${user.password}" (length: ${user.password.length}, type: ${typeof user.password})`);
+      console.log(`   Provided password: "${password}" (length: ${password.length}, type: ${typeof password})`);
+      console.log(`   Match: ${user.password === password}`);
+      console.log(`   Stored bytes: ${Buffer.from(user.password).toString('hex')}`);
+      console.log(`   Provided bytes: ${Buffer.from(password).toString('hex')}`);
+
       if (user.password !== password) {
         console.log(`❌ Login failed: Invalid password for ${email}`);
         return res.status(401).json({ error: 'Invalid email or password' });

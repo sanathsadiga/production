@@ -8,7 +8,7 @@ import productionRoutes from './routes/production';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5004;
 
 // ✅ CRITICAL: Middleware MUST come before routes
 app.use(cors());
