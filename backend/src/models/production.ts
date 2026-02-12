@@ -33,6 +33,7 @@ export interface ProductionRecord {
   newsprint_id: number | null;
   newsprint_kgs: number;
   plate_consumption: number;
+  wastes: number;
   remarks: string;
   record_date: string;
   created_at: Date;
@@ -112,9 +113,10 @@ export const addRecord = async (record: ProductionRecord): Promise<ProductionRec
         newsprint_id,
         newsprint_kgs,
         plate_consumption,
+        wastes,
         remarks,
         record_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         record.user_id,
         record.publication_id,
@@ -130,6 +132,7 @@ export const addRecord = async (record: ProductionRecord): Promise<ProductionRec
         record.newsprint_id,
         record.newsprint_kgs,
         record.plate_consumption,
+        record.wastes || 0,
         record.remarks,
         record.record_date,
       ]
@@ -299,6 +302,11 @@ export const updateRecord = async (id: number, record: Partial<ProductionRecord>
     if (record.plate_consumption !== undefined) {
       updates.push('plate_consumption = ?');
       params.push(record.plate_consumption);
+    }
+
+    if (record.wastes !== undefined) {
+      updates.push('wastes = ?');
+      params.push(record.wastes);
     }
 
     if (record.remarks !== undefined) {

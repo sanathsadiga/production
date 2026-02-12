@@ -135,6 +135,7 @@ router.post('/records', auth, async (req: AuthRequest, res) => {
       newsprint_id,
       newsprint_kgs,
       plate_consumption,
+      wastes,
       remarks,
       record_date,
     } = req.body;
@@ -147,8 +148,8 @@ router.post('/records', auth, async (req: AuthRequest, res) => {
         user_id, publication_id, custom_publication_name, po_number,
         color_pages, bw_pages, total_pages, machine_id, lprs_time,
         page_start_time, page_end_time, newsprint_id, newsprint_kgs,
-        plate_consumption, remarks, record_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        plate_consumption, wastes, remarks, record_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         user_id,
         publication_id || null,
@@ -164,6 +165,7 @@ router.post('/records', auth, async (req: AuthRequest, res) => {
         newsprint_id || null,
         newsprint_kgs,
         plate_consumption,
+        wastes || 0,
         remarks,
         record_date,
       ]
@@ -211,6 +213,7 @@ router.put('/records/:id', auth, async (req: AuthRequest, res) => {
       newsprint_id,
       newsprint_kgs,
       plate_consumption,
+      wastes,
       remarks,
       record_date,
     } = req.body;
@@ -222,7 +225,7 @@ router.put('/records/:id', auth, async (req: AuthRequest, res) => {
       `UPDATE production_records SET
         po_number = ?, color_pages = ?, bw_pages = ?, total_pages = ?,
         machine_id = ?, lprs_time = ?, page_start_time = ?, page_end_time = ?,
-        newsprint_id = ?, newsprint_kgs = ?, plate_consumption = ?,
+        newsprint_id = ?, newsprint_kgs = ?, plate_consumption = ?, wastes = ?,
         remarks = ?, record_date = ?
        WHERE id = ?`,
       [
@@ -237,6 +240,7 @@ router.put('/records/:id', auth, async (req: AuthRequest, res) => {
         newsprint_id || null,
         newsprint_kgs,
         plate_consumption,
+        wastes || 0,
         remarks,
         record_date,
         parseInt(id),
@@ -579,7 +583,8 @@ router.get('/analytics/machine', auth, async (req: AuthRequest, res) => {
       m.id,
       m.name as machine_name,
       COUNT(pr.id) as total_records,
-      SUM(pr.total_pages) as total_pages
+      SUM(pr.total_pages) as total_pages,
+      SUM(pr.plate_consumption) as total_plates
     FROM production_records pr
     LEFT JOIN machines m ON pr.machine_id = m.id
     WHERE 1=1`;
@@ -607,7 +612,7 @@ router.get('/analytics/machine', auth, async (req: AuthRequest, res) => {
       params.push(location);
     }
 
-    query += ` GROUP BY m.id, m.name ORDER BY total_records DESC`;
+    query += ` GROUP BY m.id, m.name ORDER BY total_plates DESC`;
 
     const [records]: any = await conn.query(query, params);
     conn.release();
@@ -661,6 +666,7 @@ router.get('/analytics/machine-detailed', auth, async (req: AuthRequest, res) =>
       m.name as machine_name,
       COUNT(pr.id) as total_records,
       SUM(pr.total_pages) as total_pages,
+      SUM(pr.plate_consumption) as total_plates,
       AVG(pr.total_pages) as avg_pages_per_record,
       MIN(pr.total_pages) as min_pages,
       MAX(pr.total_pages) as max_pages,
@@ -709,6 +715,7 @@ router.get('/analytics/machine-detailed', auth, async (req: AuthRequest, res) =>
       m.name as machine_name,
       COUNT(pr.id) as record_count,
       SUM(pr.total_pages) as total_pages,
+      SUM(pr.plate_consumption) as total_plates,
       AVG(pr.total_pages) as avg_pages
     FROM production_records pr
     LEFT JOIN machines m ON pr.machine_id = m.id
@@ -734,6 +741,7 @@ router.get('/analytics/machine-detailed', auth, async (req: AuthRequest, res) =>
       ...m,
       total_records: parseInt(m.total_records, 10) || 0,
       total_pages: parseInt(m.total_pages, 10) || 0,
+      total_plates: parseInt(m.total_plates, 10) || 0,
       avg_pages_per_record: parseFloat(m.avg_pages_per_record) || 0,
       min_pages: parseInt(m.min_pages, 10) || 0,
       max_pages: parseInt(m.max_pages, 10) || 0,
@@ -760,11 +768,13 @@ router.get('/analytics/machine-detailed', auth, async (req: AuthRequest, res) =>
       ...d,
       record_count: parseInt(d.record_count, 10) || 0,
       total_pages: parseInt(d.total_pages, 10) || 0,
+      total_plates: parseInt(d.total_plates, 10) || 0,
       avg_pages: parseFloat(d.avg_pages) || 0,
     }));
 
     const totalPages = machineStats.reduce((sum: number, m: any) => sum + (m.total_pages || 0), 0);
     const totalRecords = machineStats.reduce((sum: number, m: any) => sum + (m.total_records || 0), 0);
+    const totalPlates = machineStats.reduce((sum: number, m: any) => sum + (m.total_plates || 0), 0);
     const avgPagesPerRecord = totalRecords > 0 ? Math.round(totalPages / totalRecords) : 0;
 
     res.json({
@@ -776,6 +786,7 @@ router.get('/analytics/machine-detailed', auth, async (req: AuthRequest, res) =>
         total_machines: machineStats.length,
         total_records: totalRecords,
         total_pages: totalPages,
+        total_plates: totalPlates,
         avg_pages_per_record: avgPagesPerRecord,
       },
     });
@@ -1734,5 +1745,205 @@ function secondsToTime(totalSeconds: number): string {
   const secs = Math.floor(totalSeconds % 60);
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
+
+/**
+ * Get wastes analytics
+ */
+router.get('/analytics/wastes', auth, async (req: AuthRequest, res) => {
+  try {
+    const { publication_ids, start_date, end_date, location } = req.query;
+
+    const params: any[] = [];
+
+    // Build params array once - will be reused for all queries
+    if (publication_ids) {
+      const pubIds = String(publication_ids).split(',').map(id => parseInt(id.trim()));
+      params.push(...pubIds);
+    }
+
+    if (start_date) {
+      params.push(start_date);
+    }
+
+    if (end_date) {
+      params.push(end_date);
+    }
+
+    if (location) {
+      params.push(location);
+    }
+
+    // Get daily trend
+    let trendQuery = `
+      SELECT 
+        DATE(pr.record_date) as date,
+        SUM(pr.wastes) as total_wastes,
+        AVG(pr.wastes) as avg_wastes,
+        COUNT(DISTINCT pr.id) as total_records
+      FROM production_records pr
+      LEFT JOIN users u ON pr.user_id = u.id
+      WHERE 1=1
+    `;
+    if (publication_ids) {
+      const pubIds = String(publication_ids).split(',').map(id => parseInt(id.trim()));
+      trendQuery += ` AND pr.publication_id IN (${pubIds.map(() => '?').join(',')})`;
+    }
+    if (start_date) {
+      trendQuery += ` AND pr.record_date >= ?`;
+    }
+    if (end_date) {
+      trendQuery += ` AND pr.record_date <= ?`;
+    }
+    if (location) {
+      trendQuery += ` AND u.location = ?`;
+    }
+    trendQuery += ` GROUP BY DATE(pr.record_date) ORDER BY date DESC`;
+    
+    const conn = await pool.getConnection();
+    const [dailyTrend]: any = await conn.query(trendQuery, params);
+
+    // Get by publication
+    let pubQuery = `
+      SELECT 
+        pr.publication_id,
+        pub.name as publication_name,
+        SUM(pr.wastes) as total_wastes,
+        AVG(pr.wastes) as avg_wastes,
+        COUNT(DISTINCT pr.po_number) as total_pos,
+        SUM(pr.total_pages) as total_pages
+      FROM production_records pr
+      LEFT JOIN publications pub ON pr.publication_id = pub.id
+      LEFT JOIN users u ON pr.user_id = u.id
+      WHERE 1=1
+    `;
+    if (publication_ids) {
+      const pubIds = String(publication_ids).split(',').map(id => parseInt(id.trim()));
+      pubQuery += ` AND pr.publication_id IN (${pubIds.map(() => '?').join(',')})`;
+    }
+    if (start_date) {
+      pubQuery += ` AND pr.record_date >= ?`;
+    }
+    if (end_date) {
+      pubQuery += ` AND pr.record_date <= ?`;
+    }
+    if (location) {
+      pubQuery += ` AND u.location = ?`;
+    }
+    pubQuery += ` GROUP BY pr.publication_id, pub.name ORDER BY total_wastes DESC`;
+    const [byPublication]: any = await conn.query(pubQuery, params);
+
+    // Get by machine
+    let machineQuery = `
+      SELECT 
+        pr.machine_id,
+        m.name as machine_name,
+        SUM(pr.wastes) as total_wastes,
+        AVG(pr.wastes) as avg_wastes,
+        COUNT(DISTINCT pr.po_number) as total_pos,
+        SUM(pr.total_pages) as total_pages
+      FROM production_records pr
+      LEFT JOIN machines m ON pr.machine_id = m.id
+      LEFT JOIN users u ON pr.user_id = u.id
+      WHERE 1=1
+    `;
+    if (publication_ids) {
+      const pubIds = String(publication_ids).split(',').map(id => parseInt(id.trim()));
+      machineQuery += ` AND pr.publication_id IN (${pubIds.map(() => '?').join(',')})`;
+    }
+    if (start_date) {
+      machineQuery += ` AND pr.record_date >= ?`;
+    }
+    if (end_date) {
+      machineQuery += ` AND pr.record_date <= ?`;
+    }
+    if (location) {
+      machineQuery += ` AND u.location = ?`;
+    }
+    machineQuery += ` GROUP BY pr.machine_id, m.name ORDER BY total_wastes DESC`;
+    const [byMachine]: any = await conn.query(machineQuery, params);
+
+    // Get wastes with plates comparison (by PO)
+    let plateComparisonQuery = `
+      SELECT 
+        pr.po_number,
+        pub.name as publication_name,
+        m.name as machine_name,
+        pr.total_pages,
+        pr.plate_consumption,
+        pr.wastes,
+        pr.record_date
+      FROM production_records pr
+      LEFT JOIN publications pub ON pr.publication_id = pub.id
+      LEFT JOIN machines m ON pr.machine_id = m.id
+      LEFT JOIN users u ON pr.user_id = u.id
+      WHERE 1=1
+    `;
+    if (publication_ids) {
+      const pubIds = String(publication_ids).split(',').map(id => parseInt(id.trim()));
+      plateComparisonQuery += ` AND pr.publication_id IN (${pubIds.map(() => '?').join(',')})`;
+    }
+    if (start_date) {
+      plateComparisonQuery += ` AND pr.record_date >= ?`;
+    }
+    if (end_date) {
+      plateComparisonQuery += ` AND pr.record_date <= ?`;
+    }
+    if (location) {
+      plateComparisonQuery += ` AND u.location = ?`;
+    }
+    plateComparisonQuery += ` ORDER BY pr.record_date DESC LIMIT 100`;
+    const [plateComparison]: any = await conn.query(plateComparisonQuery, params);
+
+    // Get overall statistics
+    let statsQuery = `
+      SELECT 
+        SUM(pr.wastes) as total_wastes,
+        AVG(pr.wastes) as avg_wastes,
+        MIN(pr.wastes) as min_wastes,
+        MAX(pr.wastes) as max_wastes,
+        SUM(pr.plate_consumption) as total_plates,
+        AVG(pr.plate_consumption) as avg_plates,
+        COUNT(DISTINCT pr.id) as total_records,
+        COUNT(DISTINCT DATE(pr.record_date)) as days_tracked
+      FROM production_records pr
+      LEFT JOIN users u ON pr.user_id = u.id
+      WHERE 1=1
+    `;
+    if (publication_ids) {
+      const pubIds = String(publication_ids).split(',').map(id => parseInt(id.trim()));
+      statsQuery += ` AND pr.publication_id IN (${pubIds.map(() => '?').join(',')})`;
+    }
+    if (start_date) {
+      statsQuery += ` AND pr.record_date >= ?`;
+    }
+    if (end_date) {
+      statsQuery += ` AND pr.record_date <= ?`;
+    }
+    if (location) {
+      statsQuery += ` AND u.location = ?`;
+    }
+
+    const [stats]: any = await conn.query(statsQuery, params);
+    conn.release();
+
+    res.json({
+      statistics: stats[0] || {
+        total_wastes: 0,
+        avg_wastes: 0,
+        min_wastes: 0,
+        max_wastes: 0,
+        total_records: 0,
+        days_tracked: 0,
+      },
+      daily_trend: dailyTrend || [],
+      by_publication: byPublication || [],
+      by_machine: byMachine || [],
+      plate_comparison: plateComparison || [],
+    });
+  } catch (error: any) {
+    console.error('Error fetching wastes analytics:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default router;

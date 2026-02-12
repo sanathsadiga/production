@@ -84,36 +84,36 @@ INSERT INTO publications (name, code, publication_type, location, created_at) VA
 ('VK CTDMAIN', '1501', 'VK', 'Bengaluru', NOW()),
 ('CTD VKMINI SPLIT', '1501', 'VK', 'Bengaluru', NOW()),
 -- NAMMA Publications
-('Bengaluru Rural', '1501', 'NAMMA', 'Bengaluru', NOW()),
-('Bengaluru City', '1501', 'NAMMA', 'Bengaluru', NOW()),
-('Karwar', '1501', 'NAMMA', 'Karwar', NOW()),
-('Belagavi Main', '1501', 'NAMMA', 'Belgaum', NOW()),
-('Namma Chikkodi', '1501', 'NAMMA', 'Belgaum', NOW()),
-('Namma Belagavi', '1501', 'NAMMA', 'Belgaum', NOW()),
-('Namma Bailahongala', '1501', 'NAMMA', 'Belgaum', NOW()),
-('Namma Haveri', '1501', 'NAMMA', 'Belgaum', NOW()),
-('Namma Gadag', '1501', 'NAMMA', 'Belgaum', NOW()),
-('Namma Mahanagara', '1501', 'NAMMA', 'Bengaluru', NOW()),
-('Hubli Namma', '1501', 'NAMMA', 'Hubli', NOW()),
-('Namma Kasaragod', '1501', 'NAMMA', 'Kasaragod', NOW()),
-('Namma Puttur', '1501', 'NAMMA', 'Puttur', NOW()),
-('Namma Mangalore', '1501', 'NAMMA', 'Mangalore', NOW()),
-('Namma Udupi', '1501', 'NAMMA', 'Mangalore', NOW()),
-('Namma Bantwala', '1501', 'NAMMA', 'Mangalore', NOW()),
-('Namma Kundapur', '1501', 'NAMMA', 'Mangalore', NOW()),
-('Namma Hassan', '1501', 'NAMMA', 'Hassan', NOW()),
-('Namma Mysore', '1501', 'NAMMA', 'Mysore', NOW()),
-('Namma Vijayanagara', '1501', 'NAMMA', 'Mysore', NOW());
+('Bengaluru Rural', '1501', 'VK', 'Bengaluru', NOW()),
+('Bengaluru City', '1501', 'VK', 'Bengaluru', NOW()),
+('Karwar', '1501', 'VK', 'Karwar', NOW()),
+('Belagavi Main', '1501', 'VK', 'Belgaum', NOW()),
+('Namma Chikkodi', '1501', 'VK', 'Belgaum', NOW()),
+('Namma Belagavi', '1501', 'VK', 'Belgaum', NOW()),
+('Namma Bailahongala', '1501', 'VK', 'Belgaum', NOW()),
+('Namma Haveri', '1501', 'VK', 'Belgaum', NOW()),
+('Namma Gadag', '1501', 'VK', 'Belgaum', NOW()),
+('Namma Mahanagara', '1501', 'VK', 'Bengaluru', NOW()),
+('Hubli Namma', '1501', 'VK', 'Hubli', NOW()),
+('Namma Kasaragod', '1501', 'VK', 'Kasaragod', NOW()),
+('Namma Puttur', '1501', 'VK', 'Puttur', NOW()),
+('Namma Mangalore', '1501', 'VK', 'Mangalore', NOW()),
+('Namma Udupi', '1501', 'VK', 'Mangalore', NOW()),
+('Namma Bantwala', '1501', 'VK', 'Mangalore', NOW()),
+('Namma Kundapur', '1501', 'VK', 'Mangalore', NOW()),
+('Namma Hassan', '1501', 'VK', 'Hassan', NOW()),
+('Namma Mysore', '1501', 'VK', 'Mysore', NOW()),
+('Namma Vijayanagara', '1501', 'VK', 'Mysore', NOW());
 
 -- ============================================
 -- INSERT USERS (Regular Users - 8)
 -- ============================================
 INSERT INTO users (name, email, password, phone_number, location, location_code, role, created_at) VALUES
-('Alwin Pinto', 'alvin.pinto@timosofindia.com', 'Mmcl1502', '9964023020', 'Mangalore', 'MNG1502', 'user', NOW()),
+('Alwin Pinto', 'alvin.pinto@timesofindia.com', 'Mmcl1502', '9964023020', 'Mangalore', 'MNG1502', 'user', NOW()),
 ('Sanjay Kanekal', 'sanjay.k@timesofindia.com', 'Mmcl1503', '9341111918', 'Hubli', 'HBL1503', 'user', NOW()),
 ('Shivprasad', 'shivaprasad.n@timesofindia.com',  'Mmcl1505', '9876543212', 'Mysore', 'MYS1505', 'user', NOW()),
 ('Gururaj R', 'gururaj.r@timesofindia.com',  'Mmcl1506', '9483905222', 'Bagalkote', 'BKT1506', 'user', NOW()),
-('Shiv Kumar hiremath', 'hiremath.s@timeofindia.com',  'Mmcl1507', '9341110974', 'Gangavati', 'GVT1507', 'user', NOW()),
+('Shiv Kumar hiremath', 'hiremath.s@timesofindia.com',  'Mmcl1507', '9341110974', 'Gangavati', 'GVT1507', 'user', NOW()),
 ('Narappa GP', 'narappa.gowdru@timesofindia.com',  'Mmcl1508', '9845238195', 'Shimoga', 'SMG1508', 'user', NOW()),
 ('Raghavendra', 'raghavendraorao.inamdar@timesofindia.com',  'Mmcl1509', '9341110885', 'Gulbarga', 'GLB1509', 'user', NOW()),
 ('Shiddappa', 'shiddappa.kashibadiger@timesofindia.com',  'Mmcl1511', '9739996689', 'Belgaum', 'BGM1511', 'user', NOW()),
@@ -124,9 +124,9 @@ INSERT INTO users (name, email, password, phone_number, location, location_code,
 -- INSERT ADMINS (3)
 -- ============================================
 INSERT INTO users (name, email, password, phone_number, location, location_code, role, created_at) VALUES
-('Deepak Saluja', 'deepak.saluja@timesofindia.com', 'Admin@123', '9999999991', 'Bengaluru', 'HO001', 'admin', NOW()),
+('CEO', 'ceo@timesofindia.com', 'Admin@123', '9999999991', 'Bengaluru', 'HO001', 'admin', NOW()),
 ('Girish Bhat', 'girish.k@timesofindia.com', 'Admin@123', '9999999992', 'Bengaluru', 'CORP001', 'admin', NOW()),
-('Lokesh Gowda', 'lokesh.vgowda@timesofindia.com', 'admin123', '9999999993', 'Bengaluru', 'RO001', 'admin', NOW());
+('IT Team', 'mmclit@timesofindia.com', 'Admin@123', '9999999993', 'Bengaluru', 'RO001', 'admin', NOW());
 
 -- ============================================
 -- INSERT MACHINES (matched to actual schema)
@@ -142,13 +142,11 @@ INSERT INTO machines (name, code, created_at) VALUES
 -- INSERT DOWNTIME REASONS
 -- ============================================
 INSERT INTO downtime_reasons (reason, name, code, category) VALUES
-('Machine Breakdown', 'Machine Breakdown', 'DR001', 'mechanical'),
-('Paper Jam', 'Paper Jam', 'DR002', 'material'),
-('Ink Issue', 'Ink Issue', 'DR003', 'material'),
-('Scheduled Maintenance', 'Scheduled Maintenance', 'DR004', 'maintenance'),
-('Power Failure', 'Power Failure', 'DR005', 'electrical'),
-('Operator Absence', 'Operator Absence', 'DR006', 'personnel');
-
+('Mechanical down time', 'Machine Breakdown', 'DR001', 'Mechanical'),
+('Electrical', 'Electrical', 'DR002', 'Electrical'),
+('Web brake', 'Web Brake', 'DR004', 'Maintenance'),
+('Reel change', 'Reel Change', 'DR005', 'Mechanical'),
+('Cleaning', 'Cleaning', 'DR006', 'Maintenance');
 -- ============================================
 -- INSERT NEWSPRINT TYPES
 -- ============================================

@@ -89,6 +89,8 @@ export const productionAPI = {
     axiosInstance.get('/production/analytics/downtime-by-machine', { params }),
   getAnalyticsPrintDuration: (params: any) =>
     axiosInstance.get('/production/analytics/print-duration', { params }),
+  getAnalyticsWastes: (params: any) =>
+    axiosInstance.get('/production/analytics/wastes', { params }),
   getDowntimeDetails: (reasonId: number, params: any) =>
     axiosInstance.get(`/production/analytics/downtime-details/${reasonId}`, { params }),
 };
