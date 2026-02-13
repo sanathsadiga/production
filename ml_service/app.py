@@ -570,6 +570,11 @@ def get_recommendations():
                 logger.info(f"Machine {machine_id}: Skipping - no print time or downtime data")
                 continue
             
+            # If we have any downtime, generate a recommendation even if print_time is 0
+            if breakdown_count == 0:
+                logger.info(f"Machine {machine_id}: Skipping - no breakdowns detected")
+                continue
+            
             # Calculate efficiency
             total_time = total_print_time + total_downtime
             efficiency = (total_print_time / total_time * 100) if total_time > 0 else 100
