@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 
 // ✅ HARDCODED for now - frontend running on 3000, backend on 5001
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5004/api';
 
 // Debug: Log the API base URL
 console.log('🔧 API_BASE_URL:', API_BASE_URL);
@@ -93,6 +93,22 @@ export const productionAPI = {
     axiosInstance.get('/production/analytics/wastes', { params }),
   getDowntimeDetails: (reasonId: number, params: any) =>
     axiosInstance.get(`/production/analytics/downtime-details/${reasonId}`, { params }),
+};
+
+// AI Predictions API
+export const aiAPI = {
+  getMaintenancePredictions: (machineId?: number) => {
+    const params = machineId ? { machine_id: machineId } : {};
+    return axiosInstance.get('/ai/predictions', { params });
+  },
+  getMaintenanceRecommendations: (filters?: { publication_ids?: string; start_date?: string; end_date?: string; location?: string }) =>
+    axiosInstance.get('/ai/recommendations', { params: filters }),
+  runBatchAnalysis: () =>
+    axiosInstance.post('/ai/batch-analysis'),
+  getModelInfo: () =>
+    axiosInstance.get('/ai/model-info'),
+  checkMLServiceHealth: () =>
+    axiosInstance.get('/ai/health'),
 };
 
 export default axiosInstance;

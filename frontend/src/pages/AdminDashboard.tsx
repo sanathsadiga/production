@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { AdminNavbar } from '../components/Navbar';
-import { masterAPI, productionAPI } from '../services/api';
+import { masterAPI, productionAPI, aiAPI } from '../services/api';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -13,6 +13,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import PrintIcon from '@mui/icons-material/Print';
 import StackedBarChartIcon from '@mui/icons-material/StackedBarChart';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import '../styles/admin-dashboard.css';
@@ -94,13 +95,15 @@ export const AdminDashboard: React.FC = () => {
   const [printOrdersAnalytics, setPrintOrdersAnalytics] = useState<any>(null); // Used in PO tab
   const [printDurationAnalytics, setPrintDurationAnalytics] = useState<any>(null); // Used in duration tab
   const [wastesAnalytics, setWastesAnalytics] = useState<any>(null); // Used in wastes tab
+  const [aiPredictions, setAIPredictions] = useState<any>(null); // Used in ai tab
+  const [aiRecommendations, setAIRecommendations] = useState<any>(null); // Used in ai tab
   const [machineDowntimeData, setMachineDowntimeData] = useState<any[]>([]);
   const [machineDowntimeByMachine, setMachineDowntimeByMachine] = useState<any>(null); // Used in breakdown tab
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   // Sidebar tab state
-  const [activeTab, setActiveTab] = useState<'breakdown' | 'po' | 'duration' | 'machine' | 'plate' | 'newsprint' | 'wastes'>('breakdown');
+  const [activeTab, setActiveTab] = useState<'breakdown' | 'po' | 'duration' | 'machine' | 'plate' | 'newsprint' | 'wastes' | 'ai'>('breakdown');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Downtime detail modal state
@@ -195,6 +198,18 @@ export const AdminDashboard: React.FC = () => {
             productionAPI.getAnalyticsPrintDuration(params),
             productionAPI.getAnalyticsWastes(params),
           ]);
+
+        // Fetch AI recommendations separately (don't block if ML service is down)
+        try {
+          const recRes = await aiAPI.getMaintenanceRecommendations(params);
+          const predRes = await aiAPI.getMaintenancePredictions();
+          setAIRecommendations(recRes.data);
+          setAIPredictions(predRes.data);
+        } catch (aiErr: any) {
+          console.warn('⚠️ AI service unavailable:', aiErr.message);
+          setAIRecommendations(null);
+          setAIPredictions(null);
+        }
 
         setChartData({
           po: (poRes.data?.data || []).map((item: any) => ({
@@ -745,6 +760,25 @@ export const AdminDashboard: React.FC = () => {
                 >
                   <DeleteOutlineIcon sx={{ fontSize: '18px' }} /> Wastes
                 </button>
+                <button
+                  onClick={() => setActiveTab('ai')}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: activeTab === 'ai' ? '#2196F3' : '#e0e0e0',
+                    color: activeTab === 'ai' ? 'white' : '#333',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    transition: 'all 0.3s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <SmartToyIcon sx={{ fontSize: '18px' }} /> AI Insights
+                </button>
               </div>
             )}
 
@@ -876,6 +910,24 @@ export const AdminDashboard: React.FC = () => {
                   title="Wastes"
                 >
                   <DeleteOutlineIcon />
+                </div>
+                <div
+                  onClick={() => { setSidebarOpen(true); setActiveTab('ai'); }}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: activeTab === 'ai' ? '#2196F3' : '#e0e0e0',
+                    color: activeTab === 'ai' ? 'white' : '#333',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    fontSize: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  title="AI Insights"
+                >
+                  <SmartToyIcon />
                 </div>
               </div>
             )}
@@ -2039,6 +2091,98 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 ) : (
                   <div className="no-data">No wastes data available</div>
+                )}
+              </div>
+            )}
+
+            {/* AI INSIGHTS TAB */}
+            {activeTab === 'ai' && (
+              <div className="chart-wrapper">
+                <h3>🤖 AI Maintenance Predictions & Recommendations</h3>
+                {aiRecommendations && aiRecommendations.recommendations && aiRecommendations.recommendations.length > 0 ? (
+                  <div style={{ width: '100%' }}>
+                    {/* Recommendations Summary */}
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                      gap: '15px',
+                      marginBottom: '25px'
+                    }}>
+                      <div style={{
+                        backgroundColor: '#ffebee',
+                        border: '2px solid #f44336',
+                        borderRadius: '8px',
+                        padding: '15px',
+                        textAlign: 'center'
+                      }}>
+                        <p style={{ margin: '0 0 8px 0', color: '#666', fontSize: '12px', fontWeight: 'bold' }}>URGENT MAINTENANCE</p>
+                        <p style={{ margin: 0, color: '#f44336', fontSize: '24px', fontWeight: 'bold' }}>
+                          {aiRecommendations.total_urgent || 0}
+                        </p>
+                      </div>
+                      <div style={{
+                        backgroundColor: '#fff3e0',
+                        border: '2px solid #ff9800',
+                        borderRadius: '8px',
+                        padding: '15px',
+                        textAlign: 'center'
+                      }}>
+                        <p style={{ margin: '0 0 8px 0', color: '#666', fontSize: '12px', fontWeight: 'bold' }}>NORMAL MAINTENANCE</p>
+                        <p style={{ margin: 0, color: '#ff9800', fontSize: '24px', fontWeight: 'bold' }}>
+                          {aiRecommendations.total_normal || 0}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Recommendations List */}
+                    <div style={{ marginBottom: '30px' }}>
+                      <h4 style={{ fontSize: '14px', marginBottom: '15px', color: '#333' }}>📋 Maintenance Recommendations</h4>
+                      {aiRecommendations.recommendations.map((rec: any, idx: number) => (
+                        <div 
+                          key={idx}
+                          style={{
+                            padding: '15px',
+                            marginBottom: '12px',
+                            border: `3px solid ${rec.priority === 'URGENT' ? '#f44336' : '#ff9800'}`,
+                            borderRadius: '8px',
+                            backgroundColor: rec.priority === 'URGENT' ? '#ffebee' : '#fff3e0'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
+                            <h5 style={{ margin: 0, color: '#333', fontSize: '16px' }}>
+                              {rec.machine_name}
+                            </h5>
+                            <span style={{
+                              padding: '4px 12px',
+                              backgroundColor: rec.priority === 'URGENT' ? '#f44336' : '#ff9800',
+                              color: 'white',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}>
+                              {rec.priority}
+                            </span>
+                          </div>
+                          <p style={{ margin: '8px 0', color: '#555', fontSize: '14px' }}>
+                            <strong>Recommendation:</strong> {rec.recommendation}
+                          </p>
+                          <p style={{ margin: '8px 0', color: '#666', fontSize: '13px' }}>
+                            <strong>Reason:</strong> {rec.reason}
+                          </p>
+                          <p style={{ margin: '8px 0', color: '#666', fontSize: '12px' }}>
+                            <strong>Suggested Date:</strong> {rec.suggested_date}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="no-data">
+                    <p>⏳ Loading AI predictions...</p>
+                    <p style={{ fontSize: '12px', color: '#999', marginTop: '10px' }}>
+                      Make sure the ML service is running on port 5001
+                    </p>
+                  </div>
                 )}
               </div>
             )}

@@ -641,4 +641,5 @@ if __name__ == '__main__':
     daily_retraining()
     
     # Start Flask app
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    port = int(os.getenv('PORT', 5004))
+    app.run(host='0.0.0.0', port=port, debug=False)

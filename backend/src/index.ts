@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import masterRoutes from './routes/master';
 import productionRoutes from './routes/production';
+import aiRoutes from './routes/ai';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/master', masterRoutes);
 app.use('/api/production', productionRoutes);
+app.use('/api/ai', aiRoutes);
 
 // 404 handler - MUST be AFTER all routes
 app.use((req: Request, res: Response) => {
