@@ -591,22 +591,36 @@ def get_recommendations():
             recommendation = None
             reason = None
             
-            if breakdown_count > 5 and total_downtime > 120:  # 5+ breakdowns, 2+ hours downtime
+            # URGENT: Critical downtime situations
+            if breakdown_count >= 3 and total_downtime > 120:  # 3+ breakdowns, 2+ hours downtime
                 priority = 'URGENT'
                 recommendation = f"CRITICAL MAINTENANCE - {breakdown_count} breakdowns, {total_downtime:.0f} min downtime"
                 reason = f"Machine efficiency dropped to {efficiency:.1f}%. Immediate inspection needed."
-            elif breakdown_count > 3 and total_downtime > 60:  # 3+ breakdowns, 1+ hour downtime
+            # URGENT: Frequent breakdowns
+            elif breakdown_count >= 3 and total_downtime > 60:  # 3+ breakdowns, 1+ hour downtime
                 priority = 'URGENT'
                 recommendation = f"Schedule urgent maintenance - {breakdown_count} breakdowns detected"
                 reason = f"Total downtime: {total_downtime:.0f} minutes. Could improve efficiency by {100-efficiency:.1f}%"
-            elif breakdown_count > 2:
+            # URGENT: Any breakdown with significant downtime
+            elif breakdown_count >= 1 and total_downtime > 30:
+                priority = 'URGENT'
+                recommendation = f"Schedule maintenance - {breakdown_count} breakdown(s), {total_downtime:.0f} min downtime"
+                reason = f"Machine experienced downtime. Preventive maintenance recommended."
+            # NORMAL: Multiple breakdowns even with low downtime
+            elif breakdown_count >= 2:
                 priority = 'NORMAL'
                 recommendation = f"Plan preventive maintenance - {breakdown_count} recent breakdowns"
                 reason = f"Pattern detected. Current efficiency: {efficiency:.1f}%"
-            elif efficiency < 85:  # Less than 85% efficient
+            # NORMAL: Low efficiency (even without breakdowns)
+            elif efficiency < 90:  # Lowered threshold from 85% to 90%
                 priority = 'NORMAL'
                 recommendation = "Inspect and optimize machine settings"
-                reason = f"Downtime: {total_downtime:.0f} min vs print time: {total_print_time:.0f} min"
+                reason = f"Efficiency at {efficiency:.1f}%. Downtime: {total_downtime:.0f} min, Print time: {total_print_time:.0f} min"
+            # NORMAL: Any single breakdown detected
+            elif breakdown_count >= 1:
+                priority = 'NORMAL'
+                recommendation = f"Monitor machine - {breakdown_count} breakdown event recorded"
+                reason = f"Track future performance. Efficiency: {efficiency:.1f}%"
             
             if priority:
                 affected_pubs_list = list(affected_pubs)[:3]
