@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS production_records (
   newsprint_id INT NULL,
   newsprint_kgs DECIMAL(10, 2) DEFAULT 0,
   plate_consumption INT DEFAULT 0,
+  page_wastes INT DEFAULT 0,
   remarks VARCHAR(100),
   record_date DATE NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

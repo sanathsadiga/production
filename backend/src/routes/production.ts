@@ -135,6 +135,7 @@ router.post('/records', auth, async (req: AuthRequest, res) => {
       newsprint_id,
       newsprint_kgs,
       plate_consumption,
+      page_wastes,
       wastes,
       remarks,
       record_date,
@@ -148,8 +149,8 @@ router.post('/records', auth, async (req: AuthRequest, res) => {
         user_id, publication_id, custom_publication_name, po_number,
         color_pages, bw_pages, total_pages, machine_id, lprs_time,
         page_start_time, page_end_time, newsprint_id, newsprint_kgs,
-        plate_consumption, wastes, remarks, record_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        plate_consumption, page_wastes, wastes, remarks, record_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         user_id,
         publication_id || null,
@@ -165,6 +166,7 @@ router.post('/records', auth, async (req: AuthRequest, res) => {
         newsprint_id || null,
         newsprint_kgs,
         plate_consumption,
+        page_wastes || 0,
         wastes || 0,
         remarks,
         record_date,
@@ -213,6 +215,7 @@ router.put('/records/:id', auth, async (req: AuthRequest, res) => {
       newsprint_id,
       newsprint_kgs,
       plate_consumption,
+      page_wastes,
       wastes,
       remarks,
       record_date,
@@ -225,7 +228,7 @@ router.put('/records/:id', auth, async (req: AuthRequest, res) => {
       `UPDATE production_records SET
         po_number = ?, color_pages = ?, bw_pages = ?, total_pages = ?,
         machine_id = ?, lprs_time = ?, page_start_time = ?, page_end_time = ?,
-        newsprint_id = ?, newsprint_kgs = ?, plate_consumption = ?, wastes = ?,
+        newsprint_id = ?, newsprint_kgs = ?, plate_consumption = ?, page_wastes = ?, wastes = ?,
         remarks = ?, record_date = ?
        WHERE id = ?`,
       [
@@ -240,6 +243,7 @@ router.put('/records/:id', auth, async (req: AuthRequest, res) => {
         newsprint_id || null,
         newsprint_kgs,
         plate_consumption,
+        page_wastes || 0,
         wastes || 0,
         remarks,
         record_date,
@@ -1778,7 +1782,9 @@ router.get('/analytics/wastes', auth, async (req: AuthRequest, res) => {
       SELECT 
         DATE(pr.record_date) as date,
         SUM(pr.wastes) as total_wastes,
+        SUM(pr.page_wastes) as total_page_wastes,
         AVG(pr.wastes) as avg_wastes,
+        AVG(pr.page_wastes) as avg_page_wastes,
         COUNT(DISTINCT pr.id) as total_records
       FROM production_records pr
       LEFT JOIN users u ON pr.user_id = u.id
@@ -1808,7 +1814,9 @@ router.get('/analytics/wastes', auth, async (req: AuthRequest, res) => {
         pr.publication_id,
         pub.name as publication_name,
         SUM(pr.wastes) as total_wastes,
+        SUM(pr.page_wastes) as total_page_wastes,
         AVG(pr.wastes) as avg_wastes,
+        AVG(pr.page_wastes) as avg_page_wastes,
         COUNT(DISTINCT pr.po_number) as total_pos,
         SUM(pr.total_pages) as total_pages
       FROM production_records pr
@@ -1838,7 +1846,9 @@ router.get('/analytics/wastes', auth, async (req: AuthRequest, res) => {
         pr.machine_id,
         m.name as machine_name,
         SUM(pr.wastes) as total_wastes,
+        SUM(pr.page_wastes) as total_page_wastes,
         AVG(pr.wastes) as avg_wastes,
+        AVG(pr.page_wastes) as avg_page_wastes,
         COUNT(DISTINCT pr.po_number) as total_pos,
         SUM(pr.total_pages) as total_pages
       FROM production_records pr
@@ -1871,6 +1881,7 @@ router.get('/analytics/wastes', auth, async (req: AuthRequest, res) => {
         pr.total_pages,
         pr.plate_consumption,
         pr.wastes,
+        pr.page_wastes,
         pr.record_date
       FROM production_records pr
       LEFT JOIN publications pub ON pr.publication_id = pub.id
@@ -1898,9 +1909,13 @@ router.get('/analytics/wastes', auth, async (req: AuthRequest, res) => {
     let statsQuery = `
       SELECT 
         SUM(pr.wastes) as total_wastes,
+        SUM(pr.page_wastes) as total_page_wastes,
         AVG(pr.wastes) as avg_wastes,
+        AVG(pr.page_wastes) as avg_page_wastes,
         MIN(pr.wastes) as min_wastes,
+        MIN(pr.page_wastes) as min_page_wastes,
         MAX(pr.wastes) as max_wastes,
+        MAX(pr.page_wastes) as max_page_wastes,
         SUM(pr.plate_consumption) as total_plates,
         AVG(pr.plate_consumption) as avg_plates,
         COUNT(DISTINCT pr.id) as total_records,

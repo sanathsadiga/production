@@ -35,11 +35,24 @@ interface ChartData {
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'];
 
-// Helper function to format dates - show only date, no time
+// Helper function to format dates - show only date, no time (with IST timezone conversion)
 const formatDateOnly = (dateString: string): string => {
   if (!dateString) return dateString;
-  const datePart = dateString.includes('T') ? dateString.split('T')[0] : dateString.split(' ')[0];
-  return datePart || dateString;
+  try {
+    // Parse the date as UTC
+    const date = new Date(dateString);
+    // Convert to IST (UTC+5:30)
+    const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+    // Format as YYYY-MM-DD
+    const year = istDate.getUTCFullYear();
+    const month = String(istDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(istDate.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } catch (e) {
+    // Fallback to simple string splitting if parsing fails
+    const datePart = dateString.includes('T') ? dateString.split('T')[0] : dateString.split(' ')[0];
+    return datePart || dateString;
+  }
 };
 
 export const AdminDashboard: React.FC = () => {
@@ -114,7 +127,7 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const loadMasterData = async (): Promise<void> => {
       try {
-        console.log('📡 Loading master data...');
+        console.log('Loading master data...');
         const [vkRes, ospRes, locRes] = await Promise.all([
           masterAPI.getPublications('VK'),
           masterAPI.getPublications('OSP'),
@@ -136,9 +149,9 @@ export const AdminDashboard: React.FC = () => {
         setOspPublications(ospArray);
         setLocations(locationsArray);
 
-        console.log('✓ Master data loaded:', { vk: vkArray.length, osp: ospArray.length, locations: locationsArray.length });
+        console.log('Master data loaded:', { vk: vkArray.length, osp: ospArray.length, locations: locationsArray.length });
       } catch (error) {
-        console.error('❌ Error loading master data:', error);
+        console.error('Error loading master data:', error);
         setError('Failed to load master data');
       } finally {
         setIsLoading(false);
@@ -287,9 +300,9 @@ export const AdminDashboard: React.FC = () => {
         setMachineDowntimeData(downtimeData);
         setMachineDowntimeByMachine(downtimeByMachineRes.data || {});
 
-        console.log('✓ Analytics loaded');
+        console.log('Analytics loaded');
       } catch (err: any) {
-        console.error('❌ Error fetching analytics:', err);
+        console.error('Error fetching analytics:', err);
         setError(err.response?.data?.error || 'Failed to load analytics');
       } finally {
         setIsLoading(false);
@@ -334,7 +347,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleVkPubChange = (value: string) => {
-    console.log('🔍 VK Selection changed to:', value);
+    console.log('VK Selection changed to:', value);
     if (value === '') {
       setSelectedVkPub('ALL');
       setSelectedOspPub('');
@@ -348,7 +361,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleOspPubChange = (value: string) => {
-    console.log('🔍 OSP Selection changed to:', value);
+    console.log('OSP Selection changed to:', value);
     if (value === '') {
       setSelectedOspPub('ALL');
       setSelectedVkPub('');
@@ -362,7 +375,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleDowntimeRowClick = async (downtimeReason: any) => {
-    console.log('🔍 Clicked downtime reason:', downtimeReason);
+    console.log('Clicked downtime reason:', downtimeReason);
     setDowntimeDetailModal(downtimeReason);
     
     try {
@@ -384,7 +397,7 @@ export const AdminDashboard: React.FC = () => {
       const response = await productionAPI.getDowntimeDetails(downtimeReason.id, params);
       const detailedRecords = response.data.data || [];
 
-      console.log('📊 Downtime details records:', detailedRecords);
+      console.log('Downtime details records:', detailedRecords);
 
       const allPublications = [...vkPublications, ...ospPublications];
       
@@ -464,7 +477,7 @@ export const AdminDashboard: React.FC = () => {
       <div>
         <AdminNavbar />
         <div className="admin-dashboard">
-          <div className="error-message">🔒 Admin access required</div>
+          <div className="error-message">Admin access required</div>
         </div>
       </div>
     );
@@ -475,7 +488,7 @@ export const AdminDashboard: React.FC = () => {
       <div>
         <AdminNavbar />
         <div className="admin-dashboard">
-          <div className="loading">⏳ Loading dashboard...</div>
+          <div className="loading">Loading dashboard...</div>
         </div>
       </div>
     );
@@ -486,7 +499,7 @@ export const AdminDashboard: React.FC = () => {
       <AdminNavbar />
       <div className="admin-dashboard">
         <div className="dashboard-header">
-          <h1>📊 Production Analytics Dashboard</h1>
+          <h1>Production Analytics Dashboard</h1>
           <p>Welcome, {user?.name}</p>
         </div>
 
@@ -542,7 +555,7 @@ export const AdminDashboard: React.FC = () => {
 
         {/* PUBLICATION SELECTION SECTION */}
         <div className="publication-selection-container">
-          <h3>📰 Select Publications</h3>
+          <h3>Select Publications</h3>
 
           <div className="publications-dropdowns">
             <div className="dropdown-wrapper">
@@ -938,7 +951,7 @@ export const AdminDashboard: React.FC = () => {
             {/* BREAKDOWN TAB */}
             {activeTab === 'breakdown' && (
               <div className="chart-wrapper">
-                <h3>🔧 Machine Downtime Breakdown</h3>
+                <h3>Machine Downtime Breakdown</h3>
                 {machineDowntimeData && machineDowntimeData.length > 0 ? (
                   <div style={{ width: '100%' }}>
                     {/* Statistics Cards */}
@@ -1139,7 +1152,7 @@ export const AdminDashboard: React.FC = () => {
             {/* PO TAB - Similar structure for other tabs */}
             {activeTab === 'po' && (
               <div className="chart-wrapper">
-                <h3>📋 Print Orders (PO) - Comprehensive Analytics</h3>
+                <h3>Print Orders (PO) - Comprehensive Analytics</h3>
                 {printOrdersAnalytics && (printOrdersAnalytics.by_publication || []).length > 0 ? (
                   <div style={{ width: '100%' }}>
                     {/* Statistics Cards */}
@@ -1201,7 +1214,7 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* POs by Publication Bar Chart */}
                     <div style={{ marginBottom: '30px' }}>
-                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📊 Print Orders by Publication</h4>
+                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Print Orders by Publication</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={printOrdersAnalytics.by_publication || []}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1218,7 +1231,7 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* POs by Machine Bar Chart */}
                     <div style={{ marginBottom: '30px' }}>
-                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>⚙️ Print Orders by Machine</h4>
+                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Print Orders by Machine</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={printOrdersAnalytics.by_machine || []}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1236,7 +1249,7 @@ export const AdminDashboard: React.FC = () => {
                     {/* Daily PO Trend Line Chart */}
                     {printOrdersAnalytics.daily_trend && printOrdersAnalytics.daily_trend.length > 0 && (
                       <div style={{ marginBottom: '30px' }}>
-                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📈 Daily Print Orders Trend</h4>
+                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Daily Print Orders Trend</h4>
                         <ResponsiveContainer width="100%" height={300}>
                           <LineChart data={printOrdersAnalytics.daily_trend || []}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -1261,7 +1274,7 @@ export const AdminDashboard: React.FC = () => {
                     {/* Publication Summary Table */}
                     {printOrdersAnalytics.by_publication && printOrdersAnalytics.by_publication.length > 0 && (
                       <div style={{ marginBottom: '30px' }}>
-                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📰 Publication Summary</h4>
+                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Publication Summary</h4>
                         <div style={{ overflowX: 'auto' }}>
                           <table style={{
                             width: '100%',
@@ -1321,7 +1334,7 @@ export const AdminDashboard: React.FC = () => {
                     {/* Machine Summary Table */}
                     {printOrdersAnalytics.by_machine && printOrdersAnalytics.by_machine.length > 0 && (
                       <div style={{ marginBottom: '30px' }}>
-                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>⚙️ Machine Summary</h4>
+                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Machine Summary</h4>
                         <div style={{ overflowX: 'auto' }}>
                           <table style={{
                             width: '100%',
@@ -1387,7 +1400,7 @@ export const AdminDashboard: React.FC = () => {
             {/* DURATION TAB */}
             {activeTab === 'duration' && (
               <div className="chart-wrapper">
-                <h3>⏱️ Print Duration - Hours Analysis</h3>
+                <h3>Print Duration - Hours Analysis</h3>
                 {printDurationAnalytics && (printDurationAnalytics.by_publication || []).length > 0 ? (
                   <div style={{ width: '100%' }}>
                     {/* Statistics Cards */}
@@ -1449,7 +1462,7 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* Hours by Publication Bar Chart */}
                     <div style={{ marginBottom: '30px' }}>
-                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📊 Print Duration by Publication</h4>
+                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Print Duration by Publication</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={printDurationAnalytics.by_publication || []}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1466,7 +1479,7 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* Hours by Machine Bar Chart */}
                     <div style={{ marginBottom: '30px' }}>
-                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>⚙️ Print Duration by Machine</h4>
+                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Print Duration by Machine</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={printDurationAnalytics.by_machine || []}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1484,7 +1497,7 @@ export const AdminDashboard: React.FC = () => {
                     {/* Daily Print Duration Trend Line Chart */}
                     {printDurationAnalytics.daily_trend && printDurationAnalytics.daily_trend.length > 0 && (
                       <div style={{ marginBottom: '30px' }}>
-                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📈 Daily Print Duration Trend</h4>
+                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Daily Print Duration Trend</h4>
                         <ResponsiveContainer width="100%" height={300}>
                           <LineChart data={printDurationAnalytics.daily_trend || []}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -1509,7 +1522,7 @@ export const AdminDashboard: React.FC = () => {
                     {/* Publication Summary Table */}
                     {printDurationAnalytics.by_publication && printDurationAnalytics.by_publication.length > 0 && (
                       <div style={{ marginBottom: '30px' }}>
-                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📰 Publication Duration Summary</h4>
+                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Publication Duration Summary</h4>
                         <div style={{ overflowX: 'auto' }}>
                           <table style={{
                             width: '100%',
@@ -1565,7 +1578,7 @@ export const AdminDashboard: React.FC = () => {
                     {/* Machine Summary Table */}
                     {printDurationAnalytics.by_machine && printDurationAnalytics.by_machine.length > 0 && (
                       <div style={{ marginBottom: '30px' }}>
-                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>⚙️ Machine Duration Summary</h4>
+                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Machine Duration Summary</h4>
                         <div style={{ overflowX: 'auto' }}>
                           <table style={{
                             width: '100%',
@@ -1627,7 +1640,7 @@ export const AdminDashboard: React.FC = () => {
             {/* MACHINE TAB */}
             {activeTab === 'machine' && (
               <div className="chart-wrapper">
-                <h3>⚙️ Machine Usage - Detailed Analysis</h3>
+                <h3>Machine Usage - Detailed Analysis</h3>
                 {machineAnalytics && (machineAnalytics.by_machine || []).length > 0 ? (
                   <div style={{ width: '100%' }}>
                     {/* Statistics Cards */}
@@ -1689,7 +1702,7 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* Machine Usage Pie Chart */}
                     <div style={{ marginBottom: '30px' }}>
-                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>🥧 Machine Plates Distribution</h4>
+                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Machine Plates Distribution</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -1712,7 +1725,7 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* Machine Comparison Bar Chart */}
                     <div style={{ marginBottom: '30px' }}>
-                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📊 Machine Plates Comparison</h4>
+                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Machine Plates Comparison</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={machineAnalytics.by_machine || []}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1729,7 +1742,7 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* Daily Trend Line Chart */}
                     <div style={{ marginBottom: '30px' }}>
-                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📈 Daily Machine Plates Trend</h4>
+                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Daily Machine Plates Trend</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={machineAnalytics.daily_trend || []}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1751,7 +1764,7 @@ export const AdminDashboard: React.FC = () => {
             {/* PLATE TAB */}
             {activeTab === 'plate' && (
               <div className="chart-wrapper">
-                <h3>🥄 Plate Consumption Analysis</h3>
+                <h3>Plate Consumption Analysis</h3>
                 {plateConsumptionAnalytics && (plateConsumptionAnalytics.daily_trend || []).length > 0 ? (
                   <div style={{ width: '100%' }}>
                     {/* Statistics Cards */}
@@ -1837,7 +1850,7 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* Daily Trend Line Chart */}
                     <div style={{ marginBottom: '30px' }}>
-                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📈 Daily Plate Consumption Trend</h4>
+                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Daily Plate Consumption Trend</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={plateConsumptionAnalytics.daily_trend || []}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1867,7 +1880,7 @@ export const AdminDashboard: React.FC = () => {
             {/* NEWSPRINT TAB */}
             {activeTab === 'newsprint' && (
               <div className="chart-wrapper">
-                <h3>📊 Newsprint KGs Analysis</h3>
+                <h3>Newsprint KGs Analysis</h3>
                 {newsprintAnalytics && (newsprintAnalytics.daily_trend || []).length > 0 ? (
                   <div style={{ width: '100%' }}>
                     {/* Statistics Cards */}
@@ -1953,7 +1966,7 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* Daily Trend Line Chart */}
                     <div style={{ marginBottom: '30px' }}>
-                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📈 Daily Consumption Trend</h4>
+                      <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>Daily Consumption Trend</h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={newsprintKgsData}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1982,7 +1995,7 @@ export const AdminDashboard: React.FC = () => {
             {/* WASTES TAB */}
             {activeTab === 'wastes' && (
               <div className="chart-wrapper">
-                <h3>🗑️ Plates & Wastes Comparison</h3>
+                <h3>Plates, Pages & Wastes Comprehensive Analysis</h3>
                 {wastesAnalytics ? (
                   <div>
                     {/* Key Statistics Cards - Plates vs Wastes */}
@@ -2013,22 +2026,36 @@ export const AdminDashboard: React.FC = () => {
                         border: '3px solid #f44336',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                       }}>
-                        <p style={{ margin: '0', color: '#666', fontSize: '14px', fontWeight: '500' }}>Total Wastes Generated</p>
+                        <p style={{ margin: '0', color: '#666', fontSize: '14px', fontWeight: '500' }}>Total Plates Wasted</p>
                         <h2 style={{ margin: '10px 0 0 0', color: '#f44336', fontSize: '36px', fontWeight: 'bold' }}>
                           {wastesAnalytics.statistics?.total_wastes || 0}
                         </h2>
                       </div>
+                      <div style={{
+                        padding: '25px',
+                        backgroundColor: '#FCE4EC',
+                        borderRadius: '8px',
+                        textAlign: 'center',
+                        border: '3px solid #e91e63',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <p style={{ margin: '0', color: '#666', fontSize: '14px', fontWeight: '500' }}>Total Pages Wasted</p>
+                        <h2 style={{ margin: '10px 0 0 0', color: '#e91e63', fontSize: '36px', fontWeight: 'bold' }}>
+                          {wastesAnalytics.statistics?.total_page_wastes || 0}
+                        </h2>
+                      </div>
                     </div>
 
-                    {/* Simple Comparison Bar Chart */}
+                    {/* Comparison Bar Chart - Plates vs Pages Wastes */}
                     <div style={{ marginBottom: '40px' }}>
-                      <h4 style={{ fontSize: '16px', marginBottom: '15px', color: '#333', fontWeight: 'bold' }}>📊 Plates vs Wastes Comparison</h4>
+                      <h4 style={{ fontSize: '16px', marginBottom: '15px', color: '#333', fontWeight: 'bold' }}>Plates Consumed vs Wastes (Plates & Pages)</h4>
                       <ResponsiveContainer width="100%" height={400}>
                         <BarChart data={[
                           {
                             name: 'Total',
                             plates: wastesAnalytics.statistics?.total_plates || 0,
-                            wastes: wastesAnalytics.statistics?.total_wastes || 0
+                            plates_wasted: wastesAnalytics.statistics?.total_wastes || 0,
+                            pages_wasted: wastesAnalytics.statistics?.total_page_wastes || 0
                           }
                         ]}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -2040,18 +2067,45 @@ export const AdminDashboard: React.FC = () => {
                           />
                           <Legend 
                             wrapperStyle={{ paddingTop: '20px' }}
-                            formatter={(value) => value === 'plates' ? '📋 Plates Consumed' : '🗑️ Wastes Generated'}
+                            formatter={(value) => {
+                              if (value === 'plates') return 'Plates Consumed';
+                              if (value === 'plates_wasted') return 'Plates Wasted';
+                              if (value === 'pages_wasted') return 'Pages Wasted';
+                              return value;
+                            }}
                           />
                           <Bar dataKey="plates" fill="#ff9800" name="plates" radius={[8, 8, 0, 0]} />
-                          <Bar dataKey="wastes" fill="#f44336" name="wastes" radius={[8, 8, 0, 0]} />
+                          <Bar dataKey="plates_wasted" fill="#f44336" name="plates_wasted" radius={[8, 8, 0, 0]} />
+                          <Bar dataKey="pages_wasted" fill="#e91e63" name="pages_wasted" radius={[8, 8, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
 
-                    {/* PO Comparison Table - Detail view of all records */}
+                    {/* Daily Trend - Plates & Pages Wastes Over Time */}
+                    {wastesAnalytics.daily_trend && wastesAnalytics.daily_trend.length > 0 && (
+                      <div style={{ marginBottom: '40px' }}>
+                        <h4 style={{ fontSize: '16px', marginBottom: '15px', color: '#333', fontWeight: 'bold' }}>Daily Wastes Trend (Plates & Pages)</h4>
+                        <ResponsiveContainer width="100%" height={350}>
+                          <LineChart data={[...wastesAnalytics.daily_trend].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="date" />
+                            <YAxis />
+                            <Tooltip 
+                              formatter={(value: any) => value?.toLocaleString?.() || value || 0}
+                              contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #ccc' }}
+                            />
+                            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                            <Line type="monotone" dataKey="total_wastes" stroke="#f44336" name="Plates Wasted" strokeWidth={2} dot={{ r: 4 }} />
+                            <Line type="monotone" dataKey="total_page_wastes" stroke="#e91e63" name="Pages Wasted" strokeWidth={2} dot={{ r: 4 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+
+                    {/* PO Comparison Table - Detail view of all records with Pages Wasted */}
                     {wastesAnalytics.plate_comparison && wastesAnalytics.plate_comparison.length > 0 && (
                       <div style={{ marginBottom: '30px' }}>
-                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>📋 PO Comparison: Plates, Pages & Wastes</h4>
+                        <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>PO Detailed Comparison: Plates, Pages & Wastes</h4>
                         <div style={{ overflowX: 'auto' }}>
                           <table style={{
                             width: '100%',
@@ -2067,7 +2121,8 @@ export const AdminDashboard: React.FC = () => {
                                 <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Machine</th>
                                 <th style={{ padding: '12px', textAlign: 'right', borderBottom: '2px solid #ddd' }}>Pages</th>
                                 <th style={{ padding: '12px', textAlign: 'right', borderBottom: '2px solid #ddd' }}>Plates</th>
-                                <th style={{ padding: '12px', textAlign: 'right', borderBottom: '2px solid #ddd' }}>Wastes</th>
+                                <th style={{ padding: '12px', textAlign: 'right', borderBottom: '2px solid #ddd' }}>Plates Wasted</th>
+                                <th style={{ padding: '12px', textAlign: 'right', borderBottom: '2px solid #ddd' }}>Pages Wasted</th>
                                 <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Date</th>
                               </tr>
                             </thead>
@@ -2080,6 +2135,7 @@ export const AdminDashboard: React.FC = () => {
                                   <td style={{ padding: '12px', textAlign: 'right', color: '#4caf50', fontWeight: '500' }}>{record.total_pages || 0}</td>
                                   <td style={{ padding: '12px', textAlign: 'right', color: '#ff9800', fontWeight: '500' }}>{record.plate_consumption || 0}</td>
                                   <td style={{ padding: '12px', textAlign: 'right', color: '#f44336', fontWeight: 'bold' }}>{record.wastes || 0}</td>
+                                  <td style={{ padding: '12px', textAlign: 'right', color: '#e91e63', fontWeight: 'bold' }}>{record.page_wastes || 0}</td>
                                   <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>{record.record_date ? formatDateOnly(record.record_date) : 'N/A'}</td>
                                 </tr>
                               ))}
@@ -2098,7 +2154,7 @@ export const AdminDashboard: React.FC = () => {
             {/* AI INSIGHTS TAB */}
             {activeTab === 'ai' && (
               <div className="chart-wrapper">
-                <h3>🤖 AI Maintenance Predictions & Recommendations</h3>
+                <h3>AI Maintenance Predictions & Recommendations</h3>
                 {aiRecommendations && aiRecommendations.recommendations && aiRecommendations.recommendations.length > 0 ? (
                   <div style={{ width: '100%' }}>
                     {/* Recommendations Summary */}
@@ -2136,7 +2192,7 @@ export const AdminDashboard: React.FC = () => {
 
                     {/* Recommendations List */}
                     <div style={{ marginBottom: '30px' }}>
-                      <h4 style={{ fontSize: '14px', marginBottom: '15px', color: '#333' }}>📋 Maintenance Recommendations</h4>
+                      <h4 style={{ fontSize: '14px', marginBottom: '15px', color: '#333' }}>Maintenance Recommendations</h4>
                       {aiRecommendations.recommendations.map((rec: any, idx: number) => (
                         <div 
                           key={idx}

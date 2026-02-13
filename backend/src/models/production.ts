@@ -33,7 +33,8 @@ export interface ProductionRecord {
   newsprint_id: number | null;
   newsprint_kgs: number;
   plate_consumption: number;
-  wastes: number;
+  page_wastes: number;
+  wastes?: number; // Legacy - for backward compatibility with plate_consumption waste
   remarks: string;
   record_date: string;
   created_at: Date;
@@ -113,7 +114,7 @@ export const addRecord = async (record: ProductionRecord): Promise<ProductionRec
         newsprint_id,
         newsprint_kgs,
         plate_consumption,
-        wastes,
+        page_wastes,
         remarks,
         record_date
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -132,7 +133,7 @@ export const addRecord = async (record: ProductionRecord): Promise<ProductionRec
         record.newsprint_id,
         record.newsprint_kgs,
         record.plate_consumption,
-        record.wastes || 0,
+        record.page_wastes || 0,
         record.remarks,
         record.record_date,
       ]
@@ -302,6 +303,11 @@ export const updateRecord = async (id: number, record: Partial<ProductionRecord>
     if (record.plate_consumption !== undefined) {
       updates.push('plate_consumption = ?');
       params.push(record.plate_consumption);
+    }
+
+    if (record.page_wastes !== undefined) {
+      updates.push('page_wastes = ?');
+      params.push(record.page_wastes);
     }
 
     if (record.wastes !== undefined) {

@@ -52,7 +52,8 @@ interface ProductionRecord {
   newsprint_id: number | null;
   newsprint_kgs: number;
   plate_consumption: number;
-  wastes: number;
+  page_wastes: number;
+  wastes?: number; // Legacy field
   remarks: string;
   record_date: string;
   created_at: string;
@@ -79,7 +80,8 @@ interface EditFormData {
   newsprint_id: number | string | null;
   newsprint_kgs: number | string;
   plate_consumption: number | string;
-  wastes: number | string;
+  page_wastes: number | string;
+  wastes?: number | string; // Legacy field
   remarks: string;
   record_date: string;
   created_at: string;
@@ -106,7 +108,8 @@ interface ProductionRecordPayload {
   newsprint_id: number | null;
   newsprint_kgs: number;
   plate_consumption: number;
-  wastes: number;
+  page_wastes: number;
+  wastes?: number; // Legacy field
   remarks: string;
   record_date: string;
 }
@@ -160,6 +163,7 @@ export const UserDashboard: React.FC = () => {
     newsprint_kgs: 0,
     plate_consumption: 0,
     wastes: 0,
+    page_wastes: 0,
     remarks: "",
     record_date: new Date().toISOString().split("T")[0],
   });
@@ -411,7 +415,7 @@ export const UserDashboard: React.FC = () => {
         [name]: parseInt(value) || 0,
         total_pages: colorPages + bwPages,
       }));
-    } else if (name === "plate_consumption" || name === "wastes") {
+    } else if (name === "plate_consumption" || name === "page_wastes" || name === "wastes") {
       setFormData((prev) => ({
         ...prev,
         [name]: parseInt(value) || 0,
@@ -489,6 +493,7 @@ export const UserDashboard: React.FC = () => {
           : null,
         newsprint_kgs: parseFloat(formData.newsprint_kgs.toString()) || 0,
         plate_consumption: parseInt(formData.plate_consumption.toString()) || 0,
+        page_wastes: parseInt(formData.page_wastes.toString()) || 0,
         wastes: parseInt(formData.wastes.toString()) || 0,
         remarks: formData.remarks,
         record_date: formData.record_date,
@@ -519,6 +524,7 @@ export const UserDashboard: React.FC = () => {
         newsprint_kgs: 0,
         plate_consumption: 0,
         wastes: 0,
+        page_wastes: 0,
         remarks: "",
         record_date: new Date().toISOString().split("T")[0],
       });
@@ -608,6 +614,7 @@ export const UserDashboard: React.FC = () => {
         name === "machine_id" ||
         name === "newsprint_id" ||
         name === "plate_consumption" ||
+        name === "page_wastes" ||
         name === "wastes"
       ) {
         return {
@@ -691,7 +698,8 @@ export const UserDashboard: React.FC = () => {
         newsprint_kgs: parseFloat(String(editFormData.newsprint_kgs)) || 0,
         plate_consumption:
           parseInt(String(editFormData.plate_consumption)) || 0,
-        wastes: parseInt(String(editFormData.wastes)) || 0,
+        page_wastes: parseInt(String(editFormData.page_wastes)) || 0,
+        wastes: editFormData.wastes ? parseInt(String(editFormData.wastes)) || 0 : undefined,
         remarks: editFormData.remarks || "",
         record_date: editFormData.record_date,
       };
@@ -1156,11 +1164,22 @@ export const UserDashboard: React.FC = () => {
                       placeholder="Enter KGs (e.g., 10.50)"
                     />
                   </div>
+                  <div className="form-group">
+                    <label htmlFor="page_wastes">Pages/Copies Wasted</label>
+                    <input
+                      id="page_wastes"
+                      type="number"
+                      name="page_wastes"
+                      value={formData.page_wastes}
+                      onChange={handleInputChange}
+                      min="0"
+                    />
+                  </div>
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="plate_consumption">Plate Consumption</label>
+                    <label htmlFor="plate_consumption">Total Plate Consumption</label>
                     <input
                       id="plate_consumption"
                       type="number"
@@ -1171,7 +1190,7 @@ export const UserDashboard: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="wastes">Wastes</label>
+                    <label htmlFor="wastes">Total Plates Wasted</label>
                     <input
                       id="wastes"
                       type="number"
@@ -1181,6 +1200,7 @@ export const UserDashboard: React.FC = () => {
                       min="0"
                     />
                   </div>
+                  
                 </div>
               </div>
 
@@ -1253,7 +1273,8 @@ export const UserDashboard: React.FC = () => {
                       <th>Newsprint</th>
                       <th>KGs</th>
                       <th>Plate</th>
-                      <th>Wastes</th>
+                      <th>Pages Wasted</th>
+                      <th>Plates Wasted</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -1284,6 +1305,7 @@ export const UserDashboard: React.FC = () => {
                           ).toFixed(2)}
                         </td>
                         <td>{record.plate_consumption}</td>
+                        <td>{record.page_wastes}</td>
                         <td>{record.wastes}</td>
                         <td className="actions-cell">
                           <button
@@ -1416,7 +1438,13 @@ export const UserDashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="label">Wastes:</span>
+                    <span className="label">Pages Wasted:</span>
+                    <span className="value">
+                      {selectedRecord.page_wastes}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">Plates Wasted:</span>
                     <span className="value">
                       {selectedRecord.wastes}
                     </span>
@@ -1619,8 +1647,21 @@ export const UserDashboard: React.FC = () => {
                         min="0"
                       />
                     </div>
+                  </div>
+
+                  <div className="form-row">
                     <div className="form-group">
-                      <label>Wastes</label>
+                      <label>Pages Wasted</label>
+                      <input
+                        type="number"
+                        name="page_wastes"
+                        value={editFormData.page_wastes || 0}
+                        onChange={handleEditFormChange}
+                        min="0"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Plates Wasted</label>
                       <input
                         type="number"
                         name="wastes"
