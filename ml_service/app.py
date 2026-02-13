@@ -478,11 +478,16 @@ def get_recommendations():
             
             query += " ORDER BY pr.record_date DESC"
             
-            cursor.execute(query, params)
-            records = cursor.fetchall()
-            logger.info(f"Machine {machine_id}: Found {len(records) if records else 0} production records")
+            try:
+                cursor.execute(query, params)
+                records = cursor.fetchall()
+                logger.info(f"Machine {machine_id}: Query={query[:100]}..., Params={params}, Found {len(records) if records else 0} production records")
+            except Exception as query_error:
+                logger.error(f"Machine {machine_id}: Query error: {query_error}")
+                records = []
             
             if not records:
+                logger.info(f"Machine {machine_id}: No records found, skipping")
                 continue
             
             # Get downtime for these records from downtime_entries table
